@@ -1,0 +1,39 @@
+# Nuxt dev/build outputs
+.output
+.data
+.nuxt
+.nitro
+.cache
+dist
+
+# Hosting
+.vercel
+
+# Node dependencies
+node_modules
+
+# Logs
+logs
+*.log
+npm-debug.log*
+pnpm-debug.log*
+
+# Test output
+coverage
+*.tsbuildinfo
+
+# OS and editors
+.DS_Store
+.fleet
+.idea
+.vscode/*
+!.vscode/extensions.json
+
+# Local env files (keys and passwords live here, never commit)
+.env
+.env.*
+!.env.example
+
+# AI tool folders (local only)
+.agents
+.claude/settings.local.json

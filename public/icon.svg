@@ -1,0 +1,22 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
+  <defs>
+    <radialGradient id="bg" cx="50%" cy="38%" r="75%">
+      <stop offset="0" stop-color="#3A74F0"/><stop offset="0.55" stop-color="#1D4ED2"/><stop offset="1" stop-color="#071A63"/>
+    </radialGradient>
+    <linearGradient id="body" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#FFFFFF"/><stop offset="1" stop-color="#D6E3FF"/></linearGradient>
+    <filter id="glow" x="-30%" y="-30%" width="160%" height="160%"><feGaussianBlur stdDeviation="14"/></filter>
+    <filter id="drop" x="-30%" y="-30%" width="160%" height="170%"><feDropShadow dx="0" dy="14" stdDeviation="14" flood-color="#030B33" flood-opacity="0.45"/></filter>
+  </defs>
+  <rect width="512" height="512" fill="url(#bg)"/>
+  <g stroke="#fff" stroke-opacity="0.13" stroke-width="2" fill="none">
+    <circle cx="256" cy="262" r="120"/><circle cx="256" cy="262" r="180"/><circle cx="256" cy="262" r="240"/><circle cx="256" cy="262" r="300"/>
+  </g>
+  <ellipse cx="256" cy="262" rx="150" ry="120" fill="#7FA8FF" opacity="0.55" filter="url(#glow)"/>
+  <g filter="url(#drop)">
+    <rect x="150" y="196" width="212" height="150" rx="34" fill="#C6D8FF"/>
+    <rect x="150" y="176" width="212" height="150" rx="34" fill="url(#body)"/>
+    <path d="M150 214 q0 -38 38 -38 h136 q38 0 38 38" fill="none" stroke="#1D4ED2" stroke-opacity="0.18" stroke-width="3"/>
+    <rect x="270" y="226" width="106" height="56" rx="28" fill="#1D4ED2"/>
+    <circle cx="302" cy="254" r="11" fill="#fff"/>
+  </g>
+</svg>
