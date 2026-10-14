@@ -44,7 +44,7 @@ async function start() {
         </svg>
         {{ signingIn ? 'Signing in' : 'Continue with Google' }}
       </Button>
-      <p class="t-caption text-center text-muted-foreground">Only approved accounts can sign in.</p>
+      <p class="t-caption text-center text-muted-foreground">Only approved accounts can sign in. <NuxtLink to="/privacy" class="underline">Privacy</NuxtLink></p>
     </div>
   </main>
 </template>

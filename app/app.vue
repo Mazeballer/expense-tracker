@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { isPublicPath } from '~/lib/publicPaths'
 import { toast } from 'vue-sonner'
 import { Toaster } from '@/components/ui/sonner'
 
@@ -20,7 +21,7 @@ watch(signedIn, (isIn) => {
 
 <template>
   <NuxtRouteAnnouncer />
-  <NuxtLayout :name="route.path === '/login' ? false : 'default'">
+  <NuxtLayout :name="isPublicPath(route.path) ? false : 'default'">
     <NuxtPage keepalive />
   </NuxtLayout>
   <LockScreen v-if="lock.active.value && lock.locked.value" />
