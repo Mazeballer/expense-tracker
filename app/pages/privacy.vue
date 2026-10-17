@@ -22,7 +22,7 @@ useHead({ title: 'Privacy | Wallet Wyse' })
 
     <section class="flex flex-col gap-2">
       <h2 class="t-heading">Where it is kept</h2>
-      <p>Your data is stored with Supabase, and the app is hosted on Vercel. Face ID and your PIN stay on your device. Your PIN is never sent anywhere.</p>
+      <p>Your data is stored with Supabase, and the app is hosted on Vercel. When you type an expense or scan a receipt, that text or photo is sent to an AI service (Groq) only to read it. Face ID and your PIN stay on your device. Your PIN is never sent anywhere.</p>
     </section>
 
     <section class="flex flex-col gap-2">

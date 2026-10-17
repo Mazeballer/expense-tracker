@@ -30,6 +30,7 @@ pnpm dev                 # http://localhost:3000
 ```
 SUPABASE_URL=https://<your-project-ref>.supabase.co
 SUPABASE_KEY=<publishable key>
+GROQ_API_KEY=<free key from console.groq.com>   # for the AI features
 ```
 
 Use the **publishable** key only. Never put the secret or `service_role` key in this project.
@@ -91,6 +92,10 @@ Rules of thumb:
 - Responses carry a strict content security policy and other security headers (see `nuxt.config.ts`).
 - Face ID uses the device's own passkey. The PIN is stored only as a salted hash on the device. Five wrong PINs sign you out.
 
+## AI
+
+Typing a sentence and scanning a receipt are read by AI through server routes in `server/api/` (Groq). The key stays on the server. Answers are checked in `app/lib/aiParse.ts` before use, so the AI can never invent an amount. See `docs/DEPLOY.md`.
+
 ## Docs
 
 | File | What is in it |
@@ -103,7 +108,6 @@ Rules of thumb:
 
 ## Known gaps
 
-- The typing and receipt features use simple local rules, not AI yet.
 - Your old spreadsheet data is not imported yet.
 - The profile photo is stored on the device only.
 - Credit card bills cannot be marked as paid yet, so "to pay" is the month's charges.

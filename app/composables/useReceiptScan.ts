@@ -1,4 +1,5 @@
 import { todayKL } from '~/lib/date'
+import { receiptDataUrl } from '~/lib/image'
 import { readShare, type ShareReading } from '~/lib/receiptShare'
 import type { ReceiptItem, ReceiptScan } from '~/types'
 
@@ -6,12 +7,25 @@ export class ReceiptScanUnavailable extends Error {}
 
 export function useReceiptScan() {
   const { categories } = useLookups()
+  const ai = useAi()
   const demo = useRuntimeConfig().public.useMock
 
   return {
     demo,
-    async scan(_photo: File): Promise<ReceiptScan> {
-      if (!demo) throw new ReceiptScanUnavailable('Receipt reading is not connected yet')
+    async scan(photo: File): Promise<ReceiptScan> {
+      if (!demo) {
+        try {
+          return await ai.post<ReceiptScan>('/api/receipt-scan', {
+            image: await receiptDataUrl(photo),
+            today: todayKL(),
+            categories: categories.value.filter((c) => !c.archived).map((c) => ({ id: c.id, name: c.name })),
+          }, 45000)
+        } catch (e) {
+          const status = (e as { statusCode?: number }).statusCode
+          if (status === 503) throw new ReceiptScanUnavailable('Receipt reading is not set up')
+          throw e
+        }
+      }
       await new Promise((resolve) => setTimeout(resolve, 1600))
       const food = categories.value.find((c) => c.name === 'Food & Drinks') ?? categories.value[0]!
       return {
@@ -29,7 +43,8 @@ export function useReceiptScan() {
       }
     },
     async readShare(items: ReceiptItem[], instruction: string): Promise<ShareReading> {
-      return readShare(items, instruction)
+      if (demo) return readShare(items, instruction)
+      return ai.post<ShareReading>('/api/receipt-share', { instruction, items: items.map((i) => ({ id: i.id, name: i.name })) }, 15000)
     },
   }
 }

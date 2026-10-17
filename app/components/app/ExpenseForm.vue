@@ -11,7 +11,7 @@ import { cn } from '@/lib/utils'
 import type { Expense } from '~/types'
 
 const props = defineProps<{ expense: Expense }>()
-const emit = defineEmits<{ saved: [] }>()
+const emit = defineEmits<{ saved: []; remove: [] }>()
 
 const { categories, paymentMethods } = useLookups()
 const { update } = useExpenses()
@@ -154,6 +154,9 @@ onMounted(() => setTimeout(() => document.getElementById('expense-amount')?.focu
 
     <Button type="submit" class="h-11" :disabled="isSubmitting || !online">
       Save changes
+    </Button>
+    <Button v-if="expense" type="button" variant="ghost" class="h-11 text-alert hover:text-alert" :disabled="!online" @click="emit('remove')">
+      Delete expense
     </Button>
   </form>
 </template>

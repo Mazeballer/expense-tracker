@@ -66,7 +66,14 @@ async function applyInstruction() {
   if (!instruction.value.trim() || !receipt.value) return
   applying.value = true
   matchNote.value = ''
-  const reading = await readShare(items.value, instruction.value)
+  let reading: Awaited<ReturnType<typeof readShare>>
+  try {
+    reading = await readShare(items.value, instruction.value)
+  } catch {
+    applying.value = false
+    matchNote.value = 'The AI is not working right now. Tick the items yourself.'
+    return
+  }
   applying.value = false
   if (reading.itemIds.length) picked.value = reading.itemIds
   else matchNote.value = 'I could not match that to an item. Tick the items yourself.'

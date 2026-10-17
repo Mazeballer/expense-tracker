@@ -1,6 +1,13 @@
 <script setup lang="ts">
+import type { Expense } from '~/types'
 const { open, editing } = useAddSheet()
 const picked = usePickedMethod()
+const deleteExpense = useDeleteExpense()
+const toDelete = ref<Expense | null>(null)
+async function confirmDelete(e: Expense) {
+  toDelete.value = null
+  if (await deleteExpense(e)) open.value = false
+}
 const mode = ref<'text' | 'receipt'>('text')
 const photo = ref<File | null>(null)
 const photoInput = ref<HTMLInputElement | null>(null)
@@ -41,7 +48,7 @@ function onRetake(ev: Event) {
   <ResponsiveSheet v-model:open="open" :title="title">
     <template v-if="!editing" #title-end><MethodMenu /></template>
     <template v-if="open">
-      <ExpenseForm v-if="editing" :key="editing.id" :expense="editing" @saved="open = false" />
+      <ExpenseForm v-if="editing" :key="editing.id" :expense="editing" @saved="open = false" @remove="toDelete = editing" />
       <QuickLog v-else-if="mode === 'text'" @done="open = false" @receipt="toReceipt" />
       <template v-else-if="photo">
         <ReceiptReview :key="photo.name + photo.lastModified + photo.size" :photo="photo" @done="open = false" @retake="retake" @type-it="mode = 'text'" />
@@ -49,4 +56,5 @@ function onRetake(ev: Event) {
       </template>
     </template>
   </ResponsiveSheet>
+  <DeleteExpenseDialog v-model="toDelete" @confirm="confirmDelete" />
 </template>

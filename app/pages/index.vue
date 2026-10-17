@@ -13,6 +13,9 @@ const { get: getSettings } = useSettings()
 const loadSavings = useSavingsData()
 const { categories } = useLookups()
 const { show } = useAddSheet()
+const deleteExpense = useDeleteExpense()
+const toDelete = ref<Expense | null>(null)
+const confirmDelete = async (e: Expense) => { toDelete.value = null; await deleteExpense(e) }
 const month = ref(currentMonth())
 const isDesktop = useIsDesktop()
 
@@ -114,7 +117,7 @@ const edit = (e: Expense) => show(e)
             <NuxtLink to="/expenses" class="flex min-h-11 items-center text-brand-text">See all</NuxtLink>
           </div>
           <ul v-if="recent.length" class="border-t border-line">
-            <ExpenseRow v-for="e in recent" :key="e.id" :expense="e" @edit="edit(e)" />
+            <ExpenseRow v-for="e in recent" :key="e.id" :expense="e" menu @edit="edit(e)" @remove="toDelete = e" />
           </ul>
           <EmptyState v-else message="No expenses this month. Add one to start." action="Add expense" @action="show()" />
         </section>
@@ -124,4 +127,5 @@ const edit = (e: Expense) => show(e)
       </div>
     </template>
   </div>
+  <DeleteExpenseDialog v-model="toDelete" @confirm="confirmDelete" />
 </template>

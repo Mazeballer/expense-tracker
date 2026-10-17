@@ -1,13 +1,15 @@
 <script setup lang="ts">
 import { PhArrowRight, PhCamera } from '@phosphor-icons/vue'
+import { toast } from 'vue-sonner'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { formatDay } from '~/lib/date'
 import { formatMoney } from '~/lib/format'
+import { NoAmountError } from '~/composables/useQuickAdd'
 
 const emit = defineEmits<{ done: []; receipt: [photo: File] }>()
 
-const { preview } = useQuickAdd()
+const { preview, parse } = useQuickAdd()
 const { paymentMethods, categoryName, categoryIcon, methodName } = useLookups()
 const logExpense = useLogExpense()
 const online = useOnline()
@@ -31,18 +33,28 @@ const needsAmount = computed(() => text.value.trim() !== '' && !draft.value)
 const large = computed(() => (draft.value?.amount ?? 0) >= 1000)
 
 async function submit() {
-  const d = draft.value
-  if (!d || saving.value || !online.value) return
+  if (!draft.value || saving.value || !online.value) return
   saving.value = true
-  const ok = await logExpense({
-    amount: d.amount,
-    description: d.description,
-    categoryId: d.categoryId,
-    paymentMethodId: methodId.value,
-    note: null,
-    date: d.date,
-    source: 'quick_add',
-  })
+  let drafts: Awaited<ReturnType<typeof parse>>
+  try {
+    drafts = await parse(text.value)
+  } catch (e) {
+    saving.value = false
+    toast.error(e instanceof NoAmountError ? 'I could not find an amount. Add one, for example 12.50 lunch.' : 'The AI is not working right now. Try again in a moment.')
+    return
+  }
+  let ok = true
+  for (const d of drafts) {
+    ok = (await logExpense({
+      amount: d.amount,
+      description: d.description,
+      categoryId: d.categoryId,
+      paymentMethodId: d.paymentMethodId ?? methodId.value,
+      note: null,
+      date: d.date,
+      source: 'quick_add',
+    })) && ok
+  }
   saving.value = false
   if (ok) emit('done')
 }
@@ -76,7 +88,8 @@ onMounted(() => setTimeout(() => document.getElementById('quick-log')?.focus(), 
             <PhArrowRight :size="24" weight="bold" />
           </Button>
         </div>
-        <p v-if="needsAmount" class="t-secondary text-muted-foreground" role="status">Add an amount, for example 12.50 lunch.</p>
+        <p v-if="saving" class="t-secondary text-muted-foreground" role="status">Reading your message</p>
+        <p v-else-if="needsAmount" class="t-secondary text-muted-foreground" role="status">Add an amount, for example 12.50 lunch.</p>
       </div>
 
       <div v-if="draft" class="flex items-center gap-3 rounded-2xl border border-line bg-surface p-3" aria-live="polite">

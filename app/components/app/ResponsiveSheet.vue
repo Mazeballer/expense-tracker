@@ -9,9 +9,9 @@ const isDesktop = useIsDesktop()
 
 <template>
   <Dialog v-if="isDesktop" v-model:open="open">
-    <DialogContent class="max-h-[90dvh] gap-4 overflow-y-auto rounded-2xl bg-surface sm:max-w-[480px]">
+    <DialogContent :show-close-button="false" class="max-h-[90dvh] gap-4 overflow-y-auto rounded-2xl bg-surface sm:max-w-[480px]">
       <DialogHeader>
-        <div class="flex items-center justify-between gap-3 pr-8"><DialogTitle class="t-heading">{{ title }}</DialogTitle><slot name="title-end" /></div>
+        <div class="flex items-center justify-between gap-3"><DialogTitle class="t-heading">{{ title }}</DialogTitle><slot name="title-end" /></div>
         <DialogDescription :class="description ? 'text-muted-foreground' : 'sr-only'">{{ description ?? title }}</DialogDescription>
       </DialogHeader>
       <slot />

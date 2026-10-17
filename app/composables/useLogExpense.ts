@@ -1,9 +1,11 @@
 import { toast } from 'vue-sonner'
 import { klDate, monthName, monthOf, nowKLIso, todayKL, toKLIso } from '~/lib/date'
+import { formatMoney } from '~/lib/format'
 import type { ExpenseInput } from '~/types'
 
 export function useLogExpense() {
   const { add, remove, list } = useExpenses()
+  const { categoryName } = useLookups()
   const lastMethod = useLocalStorage<string>('last-payment-method', '')
 
   return async function logExpense(input: Omit<ExpenseInput, 'spentAt'> & { date: string }): Promise<boolean> {
@@ -16,7 +18,7 @@ export function useLogExpense() {
       if (rest.paymentMethodId) lastMethod.value = rest.paymentMethodId
       bumpData()
       toast.success('Expense added', {
-        description: firstOfMonth ? `First expense of ${monthName(month)}.` : undefined,
+        description: `${rest.description}, ${categoryName(rest.categoryId)}, ${formatMoney(rest.amount)}${firstOfMonth ? `. First expense of ${monthName(month)}.` : ''}`,
         action: {
           label: 'Undo',
           onClick: async () => {
