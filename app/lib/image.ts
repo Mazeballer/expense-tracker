@@ -11,16 +11,24 @@ export async function squareAvatar(file: File, size = 256): Promise<string> {
   return canvas.toDataURL('image/jpeg', 0.85)
 }
 
-// Shrinks a receipt photo so it uploads fast and fits the AI limit, and returns it as a JPEG data URL.
-export async function receiptDataUrl(file: File, maxSide = 1600): Promise<string> {
+// Shrinks a receipt photo so it uploads fast and fits the limits, and returns it as a JPEG data URL.
+// Kept large on purpose: a receipt held up in a busy scene is only a small part of the photo, and tiny text cannot be read.
+export async function receiptDataUrl(file: File, maxSide = 2400): Promise<string> {
   const bitmap = await createImageBitmap(file)
-  const scale = Math.min(1, maxSide / Math.max(bitmap.width, bitmap.height))
-  const canvas = document.createElement('canvas')
-  canvas.width = Math.round(bitmap.width * scale)
-  canvas.height = Math.round(bitmap.height * scale)
-  const ctx = canvas.getContext('2d')
-  if (!ctx) throw new Error('Canvas is not available')
-  ctx.drawImage(bitmap, 0, 0, canvas.width, canvas.height)
+  let side = maxSide
+  let url = ''
+  for (let attempt = 0; attempt < 3; attempt++) {
+    const scale = Math.min(1, side / Math.max(bitmap.width, bitmap.height))
+    const canvas = document.createElement('canvas')
+    canvas.width = Math.round(bitmap.width * scale)
+    canvas.height = Math.round(bitmap.height * scale)
+    const ctx = canvas.getContext('2d')
+    if (!ctx) throw new Error('Canvas is not available')
+    ctx.drawImage(bitmap, 0, 0, canvas.width, canvas.height)
+    url = canvas.toDataURL('image/jpeg', 0.85)
+    if (url.length < 3_000_000) break
+    side = Math.round(side * 0.8)
+  }
   bitmap.close()
-  return canvas.toDataURL('image/jpeg', 0.8)
+  return url
 }
