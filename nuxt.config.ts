@@ -35,7 +35,7 @@ export default defineNuxtConfig({
   css: ["~/assets/css/tailwind.css"],
   colorMode: { preference: "system", classSuffix: "" },
   shadcn: { prefix: "", componentDir: "./app/components/ui" },
-  nitro: { prerender: { routes: ["/"] }, routeRules: { "/**": { headers: securityHeaders } } },
+  nitro: { prerender: { routes: ["/"] }, vercel: { functions: { maxDuration: 60 } }, routeRules: { "/**": { headers: securityHeaders } } },
   runtimeConfig: {
     public: {
       useMock,

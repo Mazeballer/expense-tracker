@@ -94,7 +94,7 @@ Rules of thumb:
 
 ## AI
 
-Typing a sentence and scanning a receipt are read by AI through server routes in `server/api/` (Groq). The key stays on the server. Answers are checked in `app/lib/aiParse.ts` before use, so the AI can never invent an amount. See `docs/DEPLOY.md`.
+Typing a sentence and scanning a receipt are read by AI through server routes in `server/api/` (Groq). Typed sentences use Groq. Receipt photos use Gemini when `GEMINI_API_KEY` is set (it reads small print better), otherwise Groq. Keys stay on the server. Answers are checked in `app/lib/aiParse.ts` before use, so the AI can never invent an amount. See `docs/DEPLOY.md`.
 
 ## Docs
 

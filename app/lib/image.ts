@@ -11,14 +11,16 @@ export async function squareAvatar(file: File, size = 256): Promise<string> {
   return canvas.toDataURL('image/jpeg', 0.85)
 }
 
-// Shrinks a receipt photo so it uploads fast and fits the limits, and returns it as a JPEG data URL.
-// Kept large on purpose: a receipt held up in a busy scene is only a small part of the photo, and tiny text cannot be read.
-export async function receiptDataUrl(file: File, maxSide = 2400): Promise<string> {
+// Shrinks a receipt photo and returns it as a JPEG data URL.
+// The AI is limited by how many tokens one request may use per minute, and a photo costs about one token per 28x28 pixels.
+// So the size is capped by total pixels (about 4000 tokens), not by the long side alone.
+const MAX_PIXELS = 3_000_000
+
+export async function receiptDataUrl(file: File): Promise<string> {
   const bitmap = await createImageBitmap(file)
-  let side = maxSide
+  let scale = Math.min(1, Math.sqrt(MAX_PIXELS / (bitmap.width * bitmap.height)))
   let url = ''
   for (let attempt = 0; attempt < 3; attempt++) {
-    const scale = Math.min(1, side / Math.max(bitmap.width, bitmap.height))
     const canvas = document.createElement('canvas')
     canvas.width = Math.round(bitmap.width * scale)
     canvas.height = Math.round(bitmap.height * scale)
@@ -27,7 +29,7 @@ export async function receiptDataUrl(file: File, maxSide = 2400): Promise<string
     ctx.drawImage(bitmap, 0, 0, canvas.width, canvas.height)
     url = canvas.toDataURL('image/jpeg', 0.85)
     if (url.length < 3_000_000) break
-    side = Math.round(side * 0.8)
+    scale *= 0.8
   }
   bitmap.close()
   return url
