@@ -2,6 +2,7 @@ import type { PostgrestError } from '@supabase/supabase-js'
 import type { Backend } from '../backend'
 import { addMonths } from '../date'
 import type {
+  ApiToken,
   Account, AccountTx, Budget, Category, Expense, EpfRate, MonthTotal, PaymentMethod, PlanItem, Valuation,
 } from '../../types'
 import { supabase } from './client'
@@ -35,6 +36,7 @@ const account = (r: Row): Account => ({ id: r.id, name: r.name, icon: r.icon, ki
 const tx = (r: Row): AccountTx => ({
   id: r.id, accountId: r.account_id, occurredOn: r.occurred_on, type: r.type, amount: Number(r.amount), note: r.note,
 })
+const apiToken = (r: Row): ApiToken => ({ id: r.id, label: r.label, createdAt: r.created_at, lastUsedAt: r.last_used_at })
 const valuation = (r: Row): Valuation => ({ id: r.id, accountId: r.account_id, asOf: r.as_of, value: Number(r.value) })
 
 const PAGE = 1000
@@ -212,6 +214,16 @@ export const supabaseBackend: Backend = {
   },
   async removeValuation(id) {
     check(await supabase().from('account_valuations').delete().eq('id', id).select('id').single())
+  },
+
+  async listApiTokens() {
+    return check(await supabase().from('api_tokens').select('id,label,created_at,last_used_at').order('created_at', { ascending: false })).map(apiToken)
+  },
+  async addApiToken(label, tokenHash) {
+    return apiToken(check(await supabase().from('api_tokens').insert({ label, token_hash: tokenHash }).select('id,label,created_at,last_used_at').single()))
+  },
+  async removeApiToken(id) {
+    check(await supabase().from('api_tokens').delete().eq('id', id).select('id').single())
   },
 }
 

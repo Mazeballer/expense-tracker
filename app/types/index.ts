@@ -3,7 +3,7 @@ export type Category = { id: string; name: string; icon: string; sort: number; a
 export type PaymentMethodKind = 'debit' | 'credit_card'
 export type PaymentMethod = { id: string; name: string; kind: PaymentMethodKind; archived: boolean }
 
-export type ExpenseSource = 'app' | 'quick_add' | 'receipt' | 'telegram' | 'import'
+export type ExpenseSource = 'app' | 'quick_add' | 'receipt' | 'telegram' | 'import' | 'apple_pay'
 export type Expense = {
   id: string
   spentAt: string
@@ -75,3 +75,5 @@ export type QuickAddDraft = {
 
 export type Budget = { id: string; categoryId: string | null; amount: number }
 export type BudgetInput = { categoryId: string | null; amount: number }
+
+export type ApiToken = { id: string; label: string; createdAt: string; lastUsedAt: string | null }

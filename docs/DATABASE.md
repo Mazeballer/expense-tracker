@@ -74,7 +74,7 @@ Seed: Debit card, Credit card. Imported history has no method (`expenses.payment
 | payment_method_id | uuid null | FK `(payment_method_id, user_id)`; null for imports or "someone else paid" |
 | amount | numeric(12,2) | > 0 |
 | note | text null | max 500 |
-| source | text | `app`, `quick_add`, `receipt`, `telegram`, `import` |
+| source | text | `app`, `quick_add`, `receipt`, `telegram`, `import`, `apple_pay` |
 | import_key | text null | for the xlsx import, unique per user so re-running never duplicates |
 | created_at | timestamptz | |
 
@@ -158,6 +158,13 @@ Unique `(user_id, category_id)` with nulls treated as equal, so there is only on
 
 - `enforce_allowlist` (before insert on `auth.users`): blocks emails not in `allowed_emails`.
 - `handle_new_user` (after insert on `auth.users`): seeds `user_settings`, the EPF rate, categories, the two payment methods and the five accounts.
+
+## Apple Pay auto-log (migration 0007)
+
+- `api_tokens`: `id`, `user_id`, `label`, `token_hash` (SHA-256 of the token, unique), `created_at`, `last_used_at`. Locked to its owner by row level security. The token itself is never stored.
+- `token_owner(token)`: internal helper that finds the owner of a token. Not callable from the browser.
+- `apple_pay_context(token)`: returns the owner's categories and cards, or null for a wrong token. Callable without a login.
+- `apple_pay_log(token, amount, description, category_id, payment_method_id)`: saves one expense with source `apple_pay` for the token's owner. The same payment twice within two minutes is saved once. Callable without a login.
 
 ## Storage
 

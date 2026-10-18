@@ -1,5 +1,5 @@
 import type {
-  Account, AccountTx, AccountTxInput, Budget, BudgetInput, Category, Expense, ExpenseFilters, ExpenseInput,
+  Account, AccountTx, ApiToken, AccountTxInput, Budget, BudgetInput, Category, Expense, ExpenseFilters, ExpenseInput,
   MonthTotal, PaymentMethod, PaymentMethodKind, PlanItem, PlanItemInput, Settings, Valuation, ValuationInput,
 } from '../types'
 
@@ -43,4 +43,8 @@ export interface Backend {
   addValuation(input: ValuationInput): Promise<Valuation>
   updateValuation(id: string, input: ValuationInput): Promise<Valuation>
   removeValuation(id: string): Promise<void>
+
+  listApiTokens(): Promise<ApiToken[]>
+  addApiToken(label: string, tokenHash: string): Promise<ApiToken>
+  removeApiToken(id: string): Promise<void>
 }

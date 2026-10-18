@@ -1,5 +1,6 @@
 import type { Backend } from '../backend'
 import { addMonths, monthEnd, monthOf, klDate } from '../date'
+import type { ApiToken } from '../../types'
 import { createSeed, newId, type MockState } from './seed'
 
 const LATENCY_MS = 60
@@ -13,6 +14,7 @@ if (import.meta.client) {
   ;(window as unknown as { __mock: typeof mockControls }).__mock = mockControls
 }
 
+let tokens: ApiToken[] = []
 let state: MockState | null = null
 const db = () => (state ??= createSeed())
 
@@ -168,5 +170,15 @@ export const mockBackend: Backend = {
   removeValuation: (id) => run(() => {
     find(db().valuations, id)
     db().valuations = db().valuations.filter((v) => v.id !== id)
+  }),
+  listApiTokens: () => run(() => tokens),
+  addApiToken: (label) => run(() => {
+    const row = { id: newId('tok'), label, createdAt: new Date().toISOString(), lastUsedAt: null }
+    tokens = [row, ...tokens]
+    return row
+  }),
+  removeApiToken: (id) => run(() => {
+    find(tokens, id)
+    tokens = tokens.filter((t) => t.id !== id)
   }),
 }

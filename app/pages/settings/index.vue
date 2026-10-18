@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { PhDownloadSimple, PhListBullets, PhSignOut, PhUserFocus, PhTarget, PhWallet } from '@phosphor-icons/vue'
+import { PhCreditCard, PhDownloadSimple, PhListBullets, PhSignOut, PhUserFocus, PhTarget, PhWallet } from '@phosphor-icons/vue'
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { currentMonth } from '~/lib/date'
 import { epfRateAt, planSummary } from '~/lib/finance'
@@ -36,6 +36,10 @@ const categoryCount = computed(() => String(lookups.categories.value.filter((c) 
 
     <SettingsGroup title="Organize">
       <SettingsRow label="Categories" :icon="PhListBullets" :value="categoryCount" to="/settings/categories" />
+    </SettingsGroup>
+
+    <SettingsGroup title="Automation">
+      <SettingsRow label="Apple Pay auto-log" :icon="PhCreditCard" to="/settings/apple-pay" />
     </SettingsGroup>
 
     <SettingsGroup title="App">

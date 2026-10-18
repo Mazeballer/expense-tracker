@@ -23,7 +23,7 @@ create function storage.foldername(name text) returns text[] language sql immuta
 grant usage on schema storage to authenticated;
 grant all on storage.objects to authenticated;
 `)
-for (const f of ['0001_schema.sql', '0002_rls.sql', '0003_auth.sql', '0004_functions.sql', '0005_storage.sql']) {
+for (const f of ['0001_schema.sql', '0002_rls.sql', '0003_auth.sql', '0004_functions.sql', '0005_storage.sql', '0006_allowlist_trim.sql', '0007_apple_pay.sql']) {
   try { await run(readFileSync(dir + f, 'utf8')); console.log('ran', f) } catch (e) { console.log('FAILED', f, e.message); process.exit(1) }
 }
 
@@ -65,4 +65,15 @@ await check('budget: overall + category, duplicate overall blocked', async () =>
   await as(A, `insert into public.budgets (category_id, amount) values (null, 1500), ('${catA}', 500)`)
   try { await as(A, `insert into public.budgets (category_id, amount) values (null, 1)`); return 'duplicate allowed (BAD)' } catch { return 'duplicate overall blocked' }
 })
+await as(A, `insert into public.api_tokens (token_hash) values (encode(sha256(convert_to('secret-token','UTF8')),'hex'))`)
+const anon = async (sql) => { await run('set role anon'); try { return await db.query(sql) } finally { await run('reset role') } }
+await check('B cannot see A api tokens (expect 0)', async () => (await as(B, `select count(*)::int n from public.api_tokens`)).rows[0].n)
+await check('anon cannot read api_tokens', async () => { try { await anon(`select * from public.api_tokens`); return 'allowed (BAD)' } catch { return 'blocked' } })
+await check('apple pay: good token returns A categories and cards', async () => { const r = (await anon(`select public.apple_pay_context('secret-token') c`)).rows[0].c; return `${r.categories.length > 0 && r.methods.length > 0}` })
+await check('apple pay: wrong token returns null', async () => (await anon(`select public.apple_pay_context('nope') c`)).rows[0].c === null)
+await check('apple pay: logs an expense for the token owner', async () => { await anon(`select public.apple_pay_log('secret-token', 8.40, 'Starbucks', '${catA}', null)`); return JSON.stringify((await as(A, `select amount::float, source from public.expenses where description='Starbucks'`)).rows) })
+await check('apple pay: same payment twice is saved once', async () => { await anon(`select public.apple_pay_log('secret-token', 8.40, 'Starbucks', '${catA}', null)`); return (await as(A, `select count(*)::int n from public.expenses where description='Starbucks'`)).rows[0].n })
+await check('apple pay: B never sees it', async () => (await as(B, `select count(*)::int n from public.expenses where description='Starbucks'`)).rows[0].n)
+await check('apple pay: wrong token cannot log', async () => { try { await anon(`select public.apple_pay_log('nope', 5, 'x', '${catA}', null)`); return 'allowed (BAD)' } catch { return 'blocked' } })
+await check("apple pay: cannot use another person's category", async () => { try { await anon(`select public.apple_pay_log('secret-token', 5, 'x', '${catB}', null)`); return 'allowed (BAD)' } catch { return 'blocked' } })
 console.log('done. Every line above should say PASS.')

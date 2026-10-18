@@ -1,7 +1,6 @@
 import { todayKL } from '~/lib/date'
 import { receiptDataUrl } from '~/lib/image'
-import { readShare, type ShareReading } from '~/lib/receiptShare'
-import type { ReceiptItem, ReceiptScan } from '~/types'
+import type { ReceiptScan } from '~/types'
 
 export class ReceiptScanUnavailable extends Error {}
 
@@ -41,10 +40,6 @@ export function useReceiptScan() {
         extras: 3,
         total: 53,
       }
-    },
-    async readShare(items: ReceiptItem[], instruction: string): Promise<ShareReading> {
-      if (demo) return readShare(items, instruction)
-      return ai.post<ShareReading>('/api/receipt-share', { instruction, items: items.map((i) => ({ id: i.id, name: i.name })) }, 15000)
     },
   }
 }

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { numbersIn, pickDate, resolveExpenses, resolveReceipt, resolveShare } from '../app/lib/aiParse'
+import { numbersIn, parseAmount, pickDate, pickMethod, resolveExpenses, resolveReceipt } from '../app/lib/aiParse'
 
 const categories = [
   { id: 'c-food', name: 'Food & Drinks' },
@@ -59,16 +59,34 @@ describe('resolveReceipt', () => {
   })
 })
 
-describe('resolveShare', () => {
-  it('keeps only item ids that exist', () => {
-    expect(resolveShare({ itemIds: ['i1', 'ghost'], splitBy: 2, paidByOther: false }, ['i1', 'i2'])).toEqual({ itemIds: ['i1'], splitBy: 2, paidByOther: false })
-  })
-})
-
 describe('helpers', () => {
   it('reads numbers with commas and decimals', () => expect(numbersIn('1,234.50 and 8')).toEqual([1234.5, 8]))
   it('rejects dates far in the future or the past', () => {
     expect(pickDate('2026-10-13', today)).toBe('2026-10-13')
     expect(pickDate('2020-01-01', today)).toBe(today)
+  })
+})
+
+describe('apple pay helpers', () => {
+  const methods = [
+    { id: 'd', name: 'Debit card', kind: 'debit' as const },
+    { id: 'c', name: 'Credit card', kind: 'credit_card' as const },
+    { id: 'm', name: 'Maybank Visa', kind: 'credit_card' as const },
+  ]
+  it('reads the amount Shortcuts sends', () => {
+    expect(parseAmount('RM12.50')).toBe(12.5)
+    expect(parseAmount('RM 1,234.50')).toBe(1234.5)
+    expect(parseAmount(8)).toBe(8)
+    expect(parseAmount('-5.00')).toBeNull()
+    expect(parseAmount('')).toBeNull()
+    expect(parseAmount('0')).toBeNull()
+  })
+  it('matches the card by name first, then by credit or debit', () => {
+    expect(pickMethod('Maybank Visa', methods)).toBe('m')
+    expect(pickMethod('Maybank Visa Platinum', methods)).toBe('m')
+    expect(pickMethod('CIMB Credit Card', methods)).toBe('c')
+    expect(pickMethod('CIMB Octo', methods)).toBe('d')
+    expect(pickMethod('', methods)).toBe('d')
+    expect(pickMethod('x', [])).toBeNull()
   })
 })

@@ -104,6 +104,7 @@ Typing a sentence and scanning a receipt are read by AI through server routes in
 | [`docs/DATABASE.md`](docs/DATABASE.md) | Every table, column and function |
 | [`docs/SUPABASE_SETUP.md`](docs/SUPABASE_SETUP.md) | Supabase project, Google sign-in, allowlist |
 | [`docs/DEPLOY.md`](docs/DEPLOY.md) | Deploy to Vercel and what to check after |
+| [`docs/APPLE_PAY.md`](docs/APPLE_PAY.md) | Log Apple Pay payments automatically |
 | [`docs/SHEET_DATA.md`](docs/SHEET_DATA.md) | The old Google Sheet layout, for the data import |
 
 ## Known gaps

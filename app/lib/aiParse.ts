@@ -27,12 +27,6 @@ export const receiptAnswer = z.object({
   total: z.coerce.number(),
 })
 
-export const shareAnswer = z.object({
-  itemIds: z.array(z.string()).default([]),
-  splitBy: z.coerce.number().int().min(1).max(20).default(1),
-  paidByOther: z.boolean().default(false),
-})
-
 const round2 = (n: number) => Math.round(n * 100) / 100
 const addDays = (date: string, days: number) => {
   const d = new Date(`${date}T00:00:00Z`)
@@ -109,8 +103,23 @@ export function resolveReceipt(raw: unknown, ctx: { categories: Named[]; today: 
   }
 }
 
-export function resolveShare(raw: unknown, itemIds: string[]) {
-  const parsed = shareAnswer.safeParse(raw)
-  if (!parsed.success) return null
-  return { ...parsed.data, itemIds: parsed.data.itemIds.filter((id) => itemIds.includes(id)) }
+// Picks the card for an Apple Pay payment from the card name the iPhone sends: a name match first, then credit or debit.
+export function pickMethod(card: string, methods: { id: string; name: string; kind: 'debit' | 'credit_card' }[]): string | null {
+  const wanted = card.trim().toLowerCase()
+  if (wanted) {
+    const byName = methods.find((m) => wanted === m.name.toLowerCase())
+      ?? methods.find((m) => wanted.includes(m.name.toLowerCase()) || m.name.toLowerCase().includes(wanted))
+    if (byName) return byName.id
+    const kind = /credit/.test(wanted) ? 'credit_card' : 'debit'
+    return methods.find((m) => m.kind === kind)?.id ?? methods[0]?.id ?? null
+  }
+  return methods[0]?.id ?? null
+}
+
+// Shortcuts sends the amount as text like "RM12.50". Returns the number, or null when it is not a purchase.
+export function parseAmount(value: unknown): number | null {
+  const text = String(value ?? '')
+  if (text.includes('-')) return null // a refund
+  const n = Number(text.replace(/[^0-9.]/g, ''))
+  return Number.isFinite(n) && n > 0 && n < 1_000_000 ? round2(n) : null
 }

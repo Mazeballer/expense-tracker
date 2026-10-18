@@ -511,26 +511,22 @@ SUPABASE_SERVICE_KEY      NOT in Vercel. Local .env only, for the migration scri
 2. **Reading:** the sheet shows the photo and "Reading your receipt" with a progress bar.
 3. **Review screen** (title "Receipt"): a thumbnail, merchant, date and receipt total, then:
    - **Which items are yours?** Every line item is a tappable row with a checkbox (all ticked at first), plus Select all or Clear all.
-   - **Tell me what is yours:** a text field with an Apply button. The user can write "only the latte, my friend paid", "all of it" or "split 3". Apply ticks the matching items, sets who paid, and sets the split. If nothing matches: "I could not match that to an item. Tick the items yourself."
-   - **Who paid the bill?** Two choices, "I paid" and "Someone else paid". If someone else paid, the expense is saved with no payment method, and the screen says so.
    - **Include my share of tax and service:** a checkbox. The user's share of tax and service is proportional to their share of the item subtotal.
-   - **Your share:** the amount that will be recorded, with a short explanation (items count, tax and service included, split).
+   - **Your share:** the amount that will be recorded, with a short explanation (items count, tax and service included).
    - A sticky footer with **Add RM 15.37** and "Take another photo".
-4. **Saved record:** the amount is the user's share only. Description is the merchant (all items) or "Merchant, item, item and 2 more". Source is `receipt`. The note keeps the receipt total, who paid, the split and the item names, so the full bill is not lost.
+4. **Saved record:** the amount is the user's share only. Description is the merchant (all items) or "Merchant, item, item and 2 more". Source is `receipt`. The note keeps the receipt total and the item names, so the full bill is not lost.
 5. **Failure:** "Could not read that receipt. Try a clearer photo." with "Take another photo" and "Type it instead".
 6. Receipt photos are never stored in v1.
 
 ```
 share        = sum(ticked items) + (tax and service * ticked subtotal / all-items subtotal, if included)
-recorded     = share / splitBy
 ```
 
-**What is real today:** the review screen, item selection, sharing maths, who-paid handling and saving all work. The receipt reading itself is a demo that returns a fixed Starbucks receipt and says "Demo receipt. Receipt reading is not connected yet." The "Tell me what is yours" text is read by a local keyword matcher. Both are replaced by AI later.
+**What is real today:** the review screen, item selection, sharing maths and saving all work. The receipt reading itself is a demo that returns a fixed Starbucks receipt and says "Demo receipt. Receipt reading is not connected yet." The user ticks their own items; there is no free-text box.
 
 **AI integration (later)**
 - `useQuickAdd().parse(text)` calls a server route `POST /api/quick-add`, which verifies the user, asks a free model for `{ amount, description, category, date, paymentMethod }` using the user's category names and today's date in Malaysia time, validates the output with zod, and **cross-checks that the returned amount equals a number that appears in the user's text** (prevents the "21.30 became RM2130" bug). The local parser still gives the live preview and the AI result replaces it when it arrives; if the AI fails the local parser is used.
 - `useReceiptScan().scan(file)` calls `POST /api/receipt-scan`, which sends the photo to a free vision-capable model and returns the `ReceiptScan` shape (merchant, date, category, items, tax and service, total). The server checks that the items plus extras add up to the total (within RM 0.05) and flags the receipt if not.
-- `useReceiptScan().readShare(items, text)` calls the same model with the item list and the user's sentence and returns `{ itemIds, splitBy, paidByOther }`.
 - Provider swappable behind these functions. Groq free tier is the default candidate **(verify current limits and model names)**. Limit each user's calls per minute.
 
 Out of scope for v1: several expenses in one message, questions about the data ("how much on food this month?"), storing receipt photos.

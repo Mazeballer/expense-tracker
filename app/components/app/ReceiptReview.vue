@@ -1,7 +1,6 @@
 <script setup lang="ts">
 import { PhCheck } from '@phosphor-icons/vue'
 import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
 import { formatDay } from '~/lib/date'
 import { formatMoney, round2 } from '~/lib/format'
 import type { ReceiptScan } from '~/types'
@@ -9,7 +8,7 @@ import type { ReceiptScan } from '~/types'
 const props = defineProps<{ photo: File }>()
 const emit = defineEmits<{ done: []; retake: []; typeIt: [] }>()
 
-const { scan, readShare, demo } = useReceiptScan()
+const { scan, demo } = useReceiptScan()
 const { paymentMethods } = useLookups()
 const logExpense = useLogExpense()
 const online = useOnline()
@@ -20,11 +19,6 @@ const state = ref<'reading' | 'review' | 'failed'>('reading')
 const failure = ref('')
 const receipt = ref<ReceiptScan | null>(null)
 const picked = ref<string[]>([])
-const instruction = ref('')
-const matchNote = ref('')
-const applying = ref(false)
-const paidBy = ref<'me' | 'other'>('me')
-const splitBy = ref(1)
 const includeExtras = ref(true)
 const saving = ref(false)
 
@@ -53,7 +47,9 @@ const subtotal = computed(() => round2(items.value.reduce((t, i) => t + i.amount
 const mine = computed(() => items.value.filter((i) => picked.value.includes(i.id)))
 const mySubtotal = computed(() => round2(mine.value.reduce((t, i) => t + i.amount, 0)))
 const extraShare = computed(() => (includeExtras.value && subtotal.value > 0 && receipt.value ? round2((receipt.value.extras * mySubtotal.value) / subtotal.value) : 0))
-const myShare = computed(() => round2((mySubtotal.value + extraShare.value) / splitBy.value))
+const myShare = computed(() => round2(mySubtotal.value + extraShare.value))
+
+const extrasPercent = computed(() => (subtotal.value > 0 && receipt.value ? Math.round((receipt.value.extras / subtotal.value) * 1000) / 10 : 0))
 
 const pickedMethod = usePickedMethod()
 const methodId = computed(() => {
@@ -66,25 +62,6 @@ function toggle(id: string) {
   picked.value = picked.value.includes(id) ? picked.value.filter((x) => x !== id) : [...picked.value, id]
 }
 
-async function applyInstruction() {
-  if (!instruction.value.trim() || !receipt.value) return
-  applying.value = true
-  matchNote.value = ''
-  let reading: Awaited<ReturnType<typeof readShare>>
-  try {
-    reading = await readShare(items.value, instruction.value)
-  } catch {
-    applying.value = false
-    matchNote.value = 'The AI is not working right now. Tick the items yourself.'
-    return
-  }
-  applying.value = false
-  if (reading.itemIds.length) picked.value = reading.itemIds
-  else matchNote.value = 'I could not match that to an item. Tick the items yourself.'
-  if (reading.paidByOther) paidBy.value = 'other'
-  splitBy.value = reading.splitBy
-}
-
 async function save() {
   const r = receipt.value
   if (!r || !mine.value.length || myShare.value <= 0 || saving.value) return
@@ -94,15 +71,13 @@ async function save() {
   const description = all ? r.merchant : `${r.merchant}, ${names.slice(0, 3).join(', ')}${names.length > 3 ? ` and ${names.length - 3} more` : ''}`
   const note = [
     `Receipt total ${formatMoney(r.total)}.`,
-    paidBy.value === 'other' ? 'Paid by someone else.' : '',
-    splitBy.value > 1 ? `Split ${splitBy.value} ways.` : '',
     `Items: ${names.join(', ')}.`,
   ].filter(Boolean).join(' ').slice(0, 500)
   const ok = await logExpense({
     amount: myShare.value,
     description: description.slice(0, 200),
     categoryId: r.categoryId,
-    paymentMethodId: paidBy.value === 'me' ? methodId.value : null,
+    paymentMethodId: methodId.value,
     note,
     date: r.date,
     source: 'receipt',
@@ -166,31 +141,6 @@ async function save() {
         </button>
       </section>
 
-      <form class="flex flex-col gap-2" @submit.prevent="applyInstruction">
-        <label for="share-note" class="font-medium">Tell me what is yours</label>
-        <div class="flex gap-2">
-          <Input id="share-note" v-model="instruction" class="h-11 flex-1" placeholder="e.g. only the latte, my friend paid" autocomplete="off" enterkeyhint="done" />
-          <Button type="submit" variant="outline" class="h-11 shrink-0" :disabled="!instruction.trim() || applying">{{ applying ? 'Reading' : 'Apply' }}</Button>
-        </div>
-        <p v-if="matchNote" class="t-secondary text-muted-foreground" role="status">{{ matchNote }}</p>
-      </form>
-
-      <div class="flex flex-col gap-2">
-        <p class="font-medium" id="paid-by">Who paid the bill?</p>
-        <div class="flex gap-2" role="radiogroup" aria-labelledby="paid-by">
-          <button
-            v-for="o in [{ v: 'me', l: 'I paid' }, { v: 'other', l: 'Someone else paid' }] as const"
-            :key="o.v"
-            type="button"
-            role="radio"
-            :aria-checked="paidBy === o.v"
-            class="h-11 rounded-full border px-4"
-            :class="paidBy === o.v ? 'border-primary bg-primary text-primary-foreground' : 'border-line bg-surface text-ink'"
-            @click="paidBy = o.v"
-          >{{ o.l }}</button>
-        </div>
-      </div>
-
       <button
         v-if="receipt.extras > 0"
         type="button"
@@ -203,16 +153,15 @@ async function save() {
           class="flex size-6 shrink-0 items-center justify-center rounded-full border"
           :class="includeExtras ? 'border-primary bg-primary text-primary-foreground' : 'border-line bg-surface'"
         ><PhCheck v-if="includeExtras" :size="14" weight="bold" /></span>
-        <span class="t-secondary">Include my share of tax and service ({{ formatMoney(receipt.extras) }} in total)</span>
+        <span class="t-secondary">Include my share of tax and service ({{ formatMoney(receipt.extras) }} in total, about {{ extrasPercent }}% on top of the items)</span>
       </button>
 
       <div class="rounded-2xl border border-line bg-surface p-4">
         <p class="t-secondary text-muted-foreground">Your share</p>
         <p class="t-title mt-1">{{ formatMoney(myShare) }}</p>
         <p class="t-secondary mt-1 text-muted-foreground">
-          {{ mine.length }} of {{ items.length }} items<template v-if="extraShare > 0">, includes {{ formatMoney(extraShare) }} tax and service</template><template v-if="splitBy > 1">, split {{ splitBy }} ways</template>
+          {{ mine.length }} of {{ items.length }} items<template v-if="extraShare > 0">, includes {{ formatMoney(extraShare) }} tax and service</template>
         </p>
-        <p v-if="paidBy === 'other'" class="t-secondary mt-1 text-muted-foreground">Saved without a payment method, since you did not pay.</p>
       </div>
 
       <div class="sticky bottom-0 -mx-4 flex flex-col gap-1 border-t border-line bg-surface px-4 pb-1 pt-3">
