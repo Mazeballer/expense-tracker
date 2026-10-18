@@ -79,6 +79,7 @@ export default defineNuxtConfig({
     },
     workbox: {
       navigateFallback: "/",
+      navigateFallbackDenylist: [/^\/api\//],
       globPatterns: ["**/*.{js,css,html,png,svg,ico,woff2}"],
       runtimeCaching: [
         { urlPattern: ({ url }: { url: URL }) => url.pathname.startsWith("/api/"), handler: "NetworkOnly" },
