@@ -109,8 +109,8 @@ onMounted(() => setTimeout(() => document.getElementById('quick-log')?.focus(), 
     </form>
 
     <div class="grid grid-cols-2 gap-2">
-      <Button type="button" class="h-12 gap-2" @click="pickFrom(library)"><PhImage :size="20" />Photos</Button>
-      <Button type="button" variant="outline" class="h-12 gap-2" @click="pickFrom(camera)"><PhCamera :size="20" />Scan receipt</Button>
+      <Button type="button" variant="outline" class="h-12 gap-2" @click="pickFrom(library)"><PhImage :size="20" />Photos</Button>
+      <Button type="button" class="h-12 gap-2" @click="pickFrom(camera)"><PhCamera :size="20" />Scan receipt</Button>
     </div>
     <input ref="camera" type="file" accept="image/*" capture="environment" class="sr-only" tabindex="-1" aria-label="Take a receipt photo" @change="onPhoto">
     <input ref="library" type="file" accept="image/*" class="sr-only" tabindex="-1" aria-label="Choose a receipt photo" @change="onPhoto">

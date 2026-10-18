@@ -47,6 +47,13 @@ describe('resolveReceipt', () => {
     expect(r?.categoryId).toBe('c-food')
   })
 
+  it('still logs the total when the items cannot be read', () => {
+    const r = resolveReceipt({ merchant: null, category: null, items: null, total: '188.60' }, { categories, today })
+    expect(r?.total).toBe(188.6)
+    expect(r?.items).toHaveLength(1)
+    expect(r?.extras).toBe(0)
+  })
+
   it('rejects something that is not a receipt', () => {
     expect(resolveReceipt({ merchant: '', items: [], total: 0 }, { categories, today })).toBeNull()
   })

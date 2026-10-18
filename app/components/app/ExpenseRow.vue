@@ -1,6 +1,5 @@
 <script setup lang="ts">
 import { methodTone } from '~/lib/methodTone'
-import { formatMoney } from '~/lib/format'
 import type { Expense } from '~/types'
 
 defineProps<{ expense: Expense; menu?: boolean }>()
@@ -20,8 +19,8 @@ const kindOf = (id: string) => paymentMethods.value.find((m) => m.id === id)?.ki
           <span v-if="expense.paymentMethodId" class="rounded-full px-2 py-0.5 text-xs font-medium" :class="methodTone(kindOf(expense.paymentMethodId)).pill">{{ methodName(expense.paymentMethodId) }}</span>
         </span>
       </span>
-      <span class="font-medium">{{ formatMoney(expense.amount) }}</span>
     </button>
+    <InlineAmount :expense="expense" />
     <ExpenseActions v-if="menu" :expense="expense" @edit="$emit('edit')" @remove="$emit('remove')" />
   </li>
 </template>

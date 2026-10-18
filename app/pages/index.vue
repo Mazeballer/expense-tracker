@@ -74,8 +74,8 @@ const edit = (e: Expense) => show(e)
     <HomeSkeleton v-if="loading" />
     <ErrorState v-else-if="error || !data || !plan || !figures" what="expenses" @retry="reload" />
     <template v-else>
-      <div class="grid gap-8 lg:grid-cols-12">
-        <div class="flex flex-col gap-3 lg:col-span-5">
+      <div class="grid gap-8 max-lg:contents lg:grid-cols-12">
+        <div class="flex flex-col gap-3 max-lg:order-1 lg:col-span-5">
           <LeftToSpendHero :plan="plan" :figures="figures" :month="month" />
         </div>
 
@@ -83,7 +83,7 @@ const edit = (e: Expense) => show(e)
           <h2 class="t-heading mb-3">Last 12 months</h2>
           <TrendChart :data="trend" :selected="month" />
         </section>
-        <Tabs v-else default-value="trend">
+        <Tabs v-else default-value="trend" class="order-3">
           <TabsList class="grid h-11 w-full grid-cols-2">
             <TabsTrigger value="trend" class="h-9">Trend</TabsTrigger>
             <TabsTrigger value="categories" class="h-9">Categories</TabsTrigger>
@@ -110,8 +110,8 @@ const edit = (e: Expense) => show(e)
         </section>
       </div>
 
-      <div class="grid gap-8 lg:grid-cols-12">
-        <section class="lg:col-span-8" aria-label="Recent expenses">
+      <div class="grid gap-8 max-lg:contents lg:grid-cols-12">
+        <section class="max-lg:order-2 lg:col-span-8" aria-label="Recent expenses">
           <div class="mb-1 flex items-baseline justify-between">
             <h2 class="t-heading">Recent expenses</h2>
             <NuxtLink to="/expenses" class="flex min-h-11 items-center text-brand-text">See all</NuxtLink>
@@ -121,7 +121,7 @@ const edit = (e: Expense) => show(e)
           </ul>
           <EmptyState v-else message="No expenses this month. Add one to start." action="Add expense" @action="show()" />
         </section>
-        <div class="lg:col-span-4">
+        <div class="max-lg:order-4 lg:col-span-4">
           <SavingsSummary v-if="savingsTotal" :total="savingsTotal.total" :goal="savingsTotal.goal" :progress="savingsTotal.progress" />
         </div>
       </div>

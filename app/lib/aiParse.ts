@@ -17,11 +17,13 @@ export const textAnswer = z.object({
   })).max(20),
 })
 
+// The model sometimes sends null or leaves a field out. Only the total really matters, so everything else has a safe default.
+const text = z.string().nullish().transform((v) => v ?? '')
 export const receiptAnswer = z.object({
-  merchant: z.string().default('Receipt'),
-  date: z.string().nullable().optional(),
-  category: z.string().default(''),
-  items: z.array(z.object({ name: z.string(), amount: z.coerce.number() })).max(80),
+  merchant: text,
+  date: z.string().nullish(),
+  category: text,
+  items: z.array(z.object({ name: text, amount: z.coerce.number().catch(0) })).nullish().transform((v) => v ?? []),
   total: z.coerce.number(),
 })
 
@@ -87,14 +89,17 @@ export type ResolvedReceipt = {
 export function resolveReceipt(raw: unknown, ctx: { categories: Named[]; today: string }): ResolvedReceipt | null {
   const parsed = receiptAnswer.safeParse(raw)
   if (!parsed.success) return null
-  const items = parsed.data.items
-    .filter((i) => i.name.trim() && i.amount >= 0)
-    .map((i, n) => ({ id: `i${n + 1}`, name: i.name.trim().slice(0, 80), amount: round2(i.amount) }))
-  if (!items.length || !(parsed.data.total > 0)) return null
-  const sum = round2(items.reduce((t, i) => t + i.amount, 0))
   const total = round2(parsed.data.total)
+  if (!(total > 0) || total >= 1_000_000) return null
+  const merchant = parsed.data.merchant.trim().slice(0, 80)
+  let items = parsed.data.items
+    .filter((i) => i.name.trim() && i.amount > 0)
+    .map((i, n) => ({ id: `i${n + 1}`, name: i.name.trim().slice(0, 80), amount: round2(i.amount) }))
+  // Items we could not read are not a reason to fail: the total is enough to log one expense.
+  if (!items.length) items = [{ id: 'i1', name: merchant || 'Receipt', amount: total }]
+  const sum = round2(items.reduce((t, i) => t + i.amount, 0))
   return {
-    merchant: parsed.data.merchant.trim().slice(0, 80) || 'Receipt',
+    merchant: merchant || 'Receipt',
     date: pickDate(parsed.data.date, ctx.today),
     categoryId: pickCategory(parsed.data.category, ctx.categories),
     items,
