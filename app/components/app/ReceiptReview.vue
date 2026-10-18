@@ -36,9 +36,13 @@ onMounted(async () => {
     picked.value = result.items.map((i) => i.id)
     state.value = 'review'
   } catch (e) {
+    const err = e as { statusCode?: number; statusMessage?: string; data?: { statusMessage?: string }; message?: string }
+    console.error('Receipt scan failed', err)
     failure.value = e instanceof ReceiptScanUnavailable
       ? 'Receipt reading is not available yet.'
-      : 'Could not read that receipt. Try a clearer photo.'
+      : err.statusCode === 422
+        ? 'That does not look like a receipt. Try a clearer, flatter photo.'
+        : `Could not read that receipt (${err.statusCode ?? 'network'}: ${err.data?.statusMessage ?? err.statusMessage ?? err.message ?? 'unknown'}).`
     state.value = 'failed'
   }
 })
