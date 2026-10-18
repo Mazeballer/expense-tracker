@@ -8,7 +8,7 @@ async function confirmDelete(e: Expense) {
   toDelete.value = null
   if (await deleteExpense(e)) open.value = false
 }
-const mode = ref<'text' | 'receipt'>('text')
+const mode = ref<'text' | 'preview' | 'receipt'>('text')
 const photo = ref<File | null>(null)
 const photoInput = ref<HTMLInputElement | null>(null)
 
@@ -19,11 +19,11 @@ watch(open, (isOpen) => {
   picked.value = null
 })
 
-const title = computed(() => (editing.value ? 'Edit expense' : mode.value === 'receipt' ? 'Receipt' : 'Add expense'))
+const title = computed(() => (editing.value ? 'Edit expense' : mode.value === 'text' ? 'Add expense' : 'Receipt'))
 
 function toReceipt(file: File) {
   photo.value = file
-  mode.value = 'receipt'
+  mode.value = 'preview'
 }
 
 const lock = useAppLock()
@@ -50,6 +50,7 @@ function onRetake(ev: Event) {
     <template v-if="open">
       <ExpenseForm v-if="editing" :key="editing.id" :expense="editing" @saved="open = false" @remove="toDelete = editing" />
       <QuickLog v-else-if="mode === 'text'" @done="open = false" @receipt="toReceipt" />
+      <ReceiptPreview v-else-if="photo && mode === 'preview'" :photo="photo" @use="mode = 'receipt'" @pick="(f) => (photo = f)" />
       <template v-else-if="photo">
         <ReceiptReview :key="photo.name + photo.lastModified + photo.size" :photo="photo" @done="open = false" @retake="retake" @type-it="mode = 'text'" />
         <input ref="photoInput" type="file" accept="image/*" capture="environment" class="sr-only" tabindex="-1" aria-label="Receipt photo" @change="onRetake">

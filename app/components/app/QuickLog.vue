@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { PhArrowRight, PhCamera } from '@phosphor-icons/vue'
+import { PhArrowRight, PhCamera, PhImage } from '@phosphor-icons/vue'
 import { toast } from 'vue-sonner'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -18,7 +18,9 @@ const lastMethod = useLocalStorage<string>('last-payment-method', '')
 
 const text = ref('')
 const saving = ref(false)
-const photoInput = ref<HTMLInputElement | null>(null)
+const camera = ref<HTMLInputElement | null>(null)
+const library = ref<HTMLInputElement | null>(null)
+const pickFrom = (input: HTMLInputElement | null) => { lock.grace(); input?.click() }
 
 const defaultMethod = computed(() => {
   const usable = paymentMethods.value.filter((m) => !m.archived)
@@ -106,7 +108,11 @@ onMounted(() => setTimeout(() => document.getElementById('quick-log')?.focus(), 
 
     </form>
 
-    <Button type="button" class="h-12 gap-2" @click="lock.grace(); photoInput?.click()"><PhCamera :size="20" />Scan receipt</Button>
-    <input ref="photoInput" type="file" accept="image/*" capture="environment" class="sr-only" tabindex="-1" aria-label="Receipt photo" @change="onPhoto">
+    <div class="grid grid-cols-2 gap-2">
+      <Button type="button" class="h-12 gap-2" @click="pickFrom(camera)"><PhCamera :size="20" />Scan receipt</Button>
+      <Button type="button" variant="outline" class="h-12 gap-2" @click="pickFrom(library)"><PhImage :size="20" />Photos</Button>
+    </div>
+    <input ref="camera" type="file" accept="image/*" capture="environment" class="sr-only" tabindex="-1" aria-label="Take a receipt photo" @change="onPhoto">
+    <input ref="library" type="file" accept="image/*" class="sr-only" tabindex="-1" aria-label="Choose a receipt photo" @change="onPhoto">
   </div>
 </template>

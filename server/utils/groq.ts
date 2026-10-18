@@ -6,7 +6,7 @@ export const VISION_MODEL = process.env.GROQ_VISION_MODEL ?? 'qwen/qwen3.8-27b'
 
 // Asks the model for JSON and returns the parsed object. Throws a clean HTTP error when anything goes wrong.
 export async function groqJson(opts: { model: string; messages: Message[]; maxTokens?: number; lowEffort?: boolean; timeoutMs?: number }): Promise<unknown> {
-  const key = process.env.GROQ_API_KEY
+  const key = process.env.GROQ_API_KEY?.trim()
   if (!key) throw createError({ statusCode: 503, statusMessage: 'AI is not set up' })
 
   let res: Response

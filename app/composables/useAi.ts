@@ -7,7 +7,7 @@ export function useAi() {
       const { data } = await supabase().auth.getSession()
       const token = data.session?.access_token
       if (!token) throw new Error('Not signed in')
-      return $fetch<T>(path, { method: 'POST', body, headers: { Authorization: `Bearer ${token}` }, timeout })
+      return $fetch(path as string, { method: 'POST', body, headers: { Authorization: `Bearer ${token}` }, timeout }) as Promise<T>
     },
   }
 }
