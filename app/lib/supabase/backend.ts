@@ -1,6 +1,7 @@
 import type { PostgrestError } from '@supabase/supabase-js'
 import type { Backend } from '../backend'
 import { addMonths } from '../date'
+import { dataUrlToBlob } from '../image'
 import type {
   ApiToken,
   Account, AccountTx, Budget, Category, Expense, EpfRate, MonthTotal, PaymentMethod, PlanItem, Valuation,
@@ -19,6 +20,14 @@ const userId = async () => {
   if (!data.session) throw new Error('Not signed in')
   return data.session.user.id
 }
+
+const AVATAR_FILE = 'avatar.jpg'
+const readAsDataUrl = (blob: Blob) => new Promise<string>((resolve, reject) => {
+  const reader = new FileReader()
+  reader.onload = () => resolve(String(reader.result))
+  reader.onerror = () => reject(new Error('Could not read the photo'))
+  reader.readAsDataURL(blob)
+})
 
 // Postgres returns timestamps in UTC. The app reads them as Malaysia time, so keep the instant.
 const expense = (r: Row): Expense => ({
@@ -224,6 +233,28 @@ export const supabaseBackend: Backend = {
   },
   async removeApiToken(id) {
     check(await supabase().from('api_tokens').delete().eq('id', id).select('id').single())
+  },
+
+  async getAvatar() {
+    const id = await userId()
+    const bucket = supabase().storage.from('avatars')
+    const found = await bucket.list(id, { search: AVATAR_FILE })
+    if (found.error) throw new Error(found.error.message)
+    if (!found.data.some((f) => f.name === AVATAR_FILE)) return null
+    const file = await bucket.download(`${id}/${AVATAR_FILE}`)
+    if (file.error) throw new Error(file.error.message)
+    return readAsDataUrl(file.data)
+  },
+  async setAvatar(dataUrl) {
+    const id = await userId()
+    const blob = dataUrlToBlob(dataUrl)
+    const { error } = await supabase().storage.from('avatars').upload(`${id}/${AVATAR_FILE}`, blob, { upsert: true, contentType: 'image/jpeg' })
+    if (error) throw new Error(error.message)
+  },
+  async removeAvatar() {
+    const id = await userId()
+    const { error } = await supabase().storage.from('avatars').remove([`${id}/${AVATAR_FILE}`])
+    if (error) throw new Error(error.message)
   },
 }
 

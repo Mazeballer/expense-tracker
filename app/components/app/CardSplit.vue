@@ -24,6 +24,15 @@ const totalFor = (month: string, kind: "credit_card" | "debit") =>
 
 const credit = computed(() => totalFor(props.month, "credit_card"));
 const debit = computed(() => totalFor(props.month, "debit"));
+// Everything spent this month, including expenses with no card (for example the ones imported from the old sheet).
+const all = computed(() =>
+  round2(
+    props.expenses
+      .filter((e) => monthOf(klDate(e.spentAt)) === props.month)
+      .reduce((t, e) => t + e.amount, 0),
+  ),
+);
+const noCard = computed(() => round2(all.value - credit.value - debit.value));
 const history = computed(() => {
   const rows = Array.from({ length: 6 }, (_, i) =>
     addMonths(props.month, -i),
@@ -74,15 +83,20 @@ const history = computed(() => {
         /></span>
       </div>
       <dl
-        class="grid grid-cols-2 divide-x divide-white/25 border-t border-white/25 pt-4"
+        class="grid divide-x divide-white/25 border-t border-white/25 pt-4"
+        :class="noCard > 0 ? 'grid-cols-3' : 'grid-cols-2'"
       >
-        <div class="pr-4">
+        <div class="pr-3">
           <dt class="t-secondary text-white/85">Total spent</dt>
-          <dd class="t-heading mt-1">{{ formatMoney(credit + debit) }}</dd>
+          <dd class="t-heading mt-1">{{ formatMoney(all) }}</dd>
         </div>
-        <div class="pl-4">
+        <div class="px-3">
           <dt class="t-secondary text-white/85">Debit card</dt>
           <dd class="t-heading mt-1">{{ formatMoney(debit) }}</dd>
+        </div>
+        <div v-if="noCard > 0" class="pl-3">
+          <dt class="t-secondary text-white/85">No card</dt>
+          <dd class="t-heading mt-1">{{ formatMoney(noCard) }}</dd>
         </div>
       </dl>
       <div class="border-t border-white/25 pt-4">

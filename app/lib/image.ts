@@ -34,3 +34,11 @@ export async function receiptDataUrl(file: File): Promise<string> {
   bitmap.close()
   return url
 }
+
+// Turns a data URL into a file without fetch(), which the content security policy blocks for data: addresses.
+export function dataUrlToBlob(dataUrl: string): Blob {
+  const [head, body = ''] = dataUrl.split(',')
+  const type = /^data:([^;]+)/.exec(head ?? '')?.[1] ?? 'application/octet-stream'
+  const bytes = Uint8Array.from(atob(body), (c) => c.charCodeAt(0))
+  return new Blob([bytes], { type })
+}

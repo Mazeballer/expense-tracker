@@ -37,3 +37,6 @@ coverage
 # AI tool folders (local only)
 .agents
 .claude/settings.local.json
+
+# Personal data from the spreadsheet import
+import/

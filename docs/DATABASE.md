@@ -168,7 +168,7 @@ Unique `(user_id, category_id)` with nulls treated as equal, so there is only on
 
 ## Storage
 
-Private bucket `avatars`. Path is `<user_id>/<file>`; a user can only read and write their own folder. The path is saved in `user_settings.avatar_path`; the app reads it with a signed URL.
+Private bucket `avatars`. The photo is always `<user_id>/avatar.jpg` (256 px square, replaced on each upload); a user can only read and write their own folder. The app downloads it once per visit and keeps a copy on the device so it shows instantly. The `user_settings.avatar_path` column is not used.
 
 ## Not stored (derived in the app)
 

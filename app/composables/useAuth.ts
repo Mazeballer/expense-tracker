@@ -45,6 +45,7 @@ export function useAuth() {
   async function signOut() {
     await supabase().auth.signOut()
     localStorage.removeItem('app-lock')
+    localStorage.removeItem('profile-avatar')
     window.location.assign('/login')
   }
 

@@ -15,6 +15,7 @@ if (import.meta.client) {
 }
 
 let tokens: ApiToken[] = []
+let avatar: string | null = null
 let state: MockState | null = null
 const db = () => (state ??= createSeed())
 
@@ -181,4 +182,7 @@ export const mockBackend: Backend = {
     find(tokens, id)
     tokens = tokens.filter((t) => t.id !== id)
   }),
+  getAvatar: () => run(() => avatar),
+  setAvatar: (dataUrl) => run(() => { avatar = dataUrl }),
+  removeAvatar: () => run(() => { avatar = null }),
 }

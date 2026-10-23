@@ -47,4 +47,9 @@ export interface Backend {
   listApiTokens(): Promise<ApiToken[]>
   addApiToken(label: string, tokenHash: string): Promise<ApiToken>
   removeApiToken(id: string): Promise<void>
+
+  // The profile photo, as a small image data URL. Null when none is saved.
+  getAvatar(): Promise<string | null>
+  setAvatar(dataUrl: string): Promise<void>
+  removeAvatar(): Promise<void>
 }

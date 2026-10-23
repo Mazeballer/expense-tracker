@@ -110,6 +110,5 @@ Typing a sentence and scanning a receipt are read by AI through server routes in
 ## Known gaps
 
 - Your old spreadsheet data is not imported yet.
-- The profile photo is stored on the device only.
 - Credit card bills cannot be marked as paid yet, so "to pay" is the month's charges.
 - Free Supabase projects have no backups. Use Settings, Export all data every month.
