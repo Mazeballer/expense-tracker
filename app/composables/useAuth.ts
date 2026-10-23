@@ -1,3 +1,4 @@
+import { cacheClear } from '~/lib/offlineCache'
 import type { Session } from '@supabase/supabase-js'
 import { supabase } from '~/lib/supabase/client'
 
@@ -46,6 +47,7 @@ export function useAuth() {
     await supabase().auth.signOut()
     localStorage.removeItem('app-lock')
     localStorage.removeItem('profile-avatar')
+    await cacheClear()
     window.location.assign('/login')
   }
 

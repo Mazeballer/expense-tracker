@@ -168,7 +168,7 @@ Unique `(user_id, category_id)` with nulls treated as equal, so there is only on
 
 ## Storage
 
-Private bucket `avatars`. The photo is always `<user_id>/avatar.jpg` (256 px square, replaced on each upload); a user can only read and write their own folder. The app downloads it once per visit and keeps a copy on the device so it shows instantly. The `user_settings.avatar_path` column is not used.
+Private bucket `avatars`. The photo is `<user_id>/avatar-<time>.jpg` (256 px square). Each upload gets a new name and the older files are deleted, because browsers cache a reused name; a user can only read and write their own folder. The app downloads it once per visit and keeps a copy on the device so it shows instantly. The `user_settings.avatar_path` column is not used.
 
 ## Not stored (derived in the app)
 

@@ -21,7 +21,6 @@ const userId = async () => {
   return data.session.user.id
 }
 
-const AVATAR_FILE = 'avatar.jpg'
 const readAsDataUrl = (blob: Blob) => new Promise<string>((resolve, reject) => {
   const reader = new FileReader()
   reader.onload = () => resolve(String(reader.result))
@@ -235,25 +234,37 @@ export const supabaseBackend: Backend = {
     check(await supabase().from('api_tokens').delete().eq('id', id).select('id').single())
   },
 
+  // Every upload gets a new file name. The old copy was cached by the browser for an hour, so reusing one name showed the old photo.
   async getAvatar() {
     const id = await userId()
     const bucket = supabase().storage.from('avatars')
-    const found = await bucket.list(id, { search: AVATAR_FILE })
+    const found = await bucket.list(id, { limit: 20, sortBy: { column: 'created_at', order: 'desc' } })
     if (found.error) throw new Error(found.error.message)
-    if (!found.data.some((f) => f.name === AVATAR_FILE)) return null
-    const file = await bucket.download(`${id}/${AVATAR_FILE}`)
+    const latest = found.data.find((f) => f.name.startsWith('avatar'))
+    if (!latest) return null
+    const file = await bucket.download(`${id}/${latest.name}`)
     if (file.error) throw new Error(file.error.message)
     return readAsDataUrl(file.data)
   },
   async setAvatar(dataUrl) {
     const id = await userId()
-    const blob = dataUrlToBlob(dataUrl)
-    const { error } = await supabase().storage.from('avatars').upload(`${id}/${AVATAR_FILE}`, blob, { upsert: true, contentType: 'image/jpeg' })
+    const bucket = supabase().storage.from('avatars')
+    const name = `avatar-${Date.now()}.jpg`
+    const { error } = await bucket.upload(`${id}/${name}`, dataUrlToBlob(dataUrl), { contentType: 'image/jpeg' })
     if (error) throw new Error(error.message)
+    // The new photo is saved, so the old ones can go.
+    const found = await bucket.list(id, { limit: 100 })
+    const old = (found.data ?? []).filter((f) => f.name !== name).map((f) => `${id}/${f.name}`)
+    if (old.length) await bucket.remove(old)
   },
   async removeAvatar() {
     const id = await userId()
-    const { error } = await supabase().storage.from('avatars').remove([`${id}/${AVATAR_FILE}`])
+    const bucket = supabase().storage.from('avatars')
+    const found = await bucket.list(id, { limit: 100 })
+    if (found.error) throw new Error(found.error.message)
+    const all = found.data.map((f) => `${id}/${f.name}`)
+    if (!all.length) return
+    const { error } = await bucket.remove(all)
     if (error) throw new Error(error.message)
   },
 }
