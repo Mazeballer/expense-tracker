@@ -10,8 +10,9 @@ const { data, loading, error, reload } = useResource(() => tokens.list())
 
 const fresh = ref('')
 const creating = ref(false)
+// The dialog closes itself when Revoke is pressed, so the token to remove is kept apart from whether the dialog is open.
 const toRevoke = ref<ApiToken | null>(null)
-const revoking = computed({ get: () => toRevoke.value !== null, set: (v) => { if (!v) toRevoke.value = null } })
+const revoking = ref(false)
 const url = computed(() => `${window.location.origin}/api/apple-pay`)
 
 async function create() {
@@ -37,7 +38,6 @@ async function copy(text: string, what: string) {
 
 async function revoke() {
   const t = toRevoke.value
-  toRevoke.value = null
   if (!t) return
   await runSave(() => tokens.remove(t.id), 'Token revoked')
 }
@@ -75,7 +75,7 @@ const day = (iso: string) => formatDay(iso.slice(0, 10))
             <p class="font-medium">{{ t.label }}</p>
             <p class="t-secondary text-muted-foreground">Made {{ day(t.createdAt) }}, {{ t.lastUsedAt ? `last used ${day(t.lastUsedAt)}` : 'never used' }}</p>
           </div>
-          <Button variant="outline" class="h-10" @click="toRevoke = t">Revoke</Button>
+          <Button variant="outline" class="h-10" @click="toRevoke = t; revoking = true">Revoke</Button>
         </li>
       </ul>
     </section>
