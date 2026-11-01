@@ -16,4 +16,4 @@ How it works: an iPhone Shortcut (Automation, Transaction) sends the shop, amoun
 - A token can only add expenses. It cannot read anything.
 - Refunds (negative amounts) are not logged.
 - The same payment sent twice within two minutes is saved once.
-- Cards are matched by name to your payment methods; otherwise credit cards go to your first credit card and the rest to your first debit card.
+- Wallet does not say debit or credit. Under Settings, Cards, add each card name as Wallet shows it under Debit or Credit. A payment goes to the type whose list has a matching name (a part of the name is enough). If nothing matches, a name with the word credit in it is logged as credit and anything else as debit.

@@ -56,8 +56,8 @@ export function createSeed(): MockState {
   const catId = (name: string) => categories.find((c) => c.name === name)!.id
 
   const paymentMethods: PaymentMethod[] = [
-    { id: 'pm-debit', name: 'Debit card', kind: 'debit', archived: false },
-    { id: 'pm-credit', name: 'Credit card', kind: 'credit_card', archived: false },
+    { id: 'pm-debit', name: 'Debit card', kind: 'debit', archived: false, walletNames: [] },
+    { id: 'pm-credit', name: 'Credit card', kind: 'credit_card', archived: false, walletNames: [] },
   ]
 
   const weighted = TEMPLATES.flatMap((t) => Array(Math.max(1, Math.round(WEIGHTS[t[1]!]! * 2))).fill(t) as Template[])

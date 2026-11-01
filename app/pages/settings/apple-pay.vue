@@ -92,7 +92,7 @@ const day = (iso: string) => formatDay(iso.slice(0, 10))
       </ol>
       <p class="break-all rounded-lg bg-muted p-3 font-mono text-sm select-all">{{ url }}</p>
       <Button variant="outline" class="h-11" @click="copy(url, 'Address')">Copy address</Button>
-      <p class="t-secondary text-muted-foreground">Name your cards in the app like the cards in Wallet (for example Maybank Visa) so each payment goes on the right card. Otherwise credit cards go to your first credit card and the rest to your first debit card.</p>
+      <p class="t-secondary text-muted-foreground">Wallet does not say if a card is debit or credit. Go to Settings, Cards, and give each card the name Wallet shows for it. Then every payment goes on the right card.</p>
     </section>
 
     <ConfirmDialog v-model:open="revoking" title="Revoke this token?" description="The Shortcut using it will stop logging payments until you make a new token." confirm-label="Revoke" @confirm="revoke" />

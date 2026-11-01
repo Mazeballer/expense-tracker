@@ -20,6 +20,7 @@ const { data } = useResource(async () => {
 
 const available = computed(() => (data.value ? formatMoney(planSummary(data.value.items, epfRateAt(data.value.settings.epfRates, currentMonth()), currentMonth()).afterFixed) : ''))
 const goal = computed(() => (data.value ? (data.value.settings.savingsGoal === null ? 'Not set' : formatMoney(data.value.settings.savingsGoal)) : ''))
+const cardCount = computed(() => String(lookups.paymentMethods.value.reduce((t, m) => t + (m.walletNames ?? []).length, 0)))
 const categoryCount = computed(() => String(lookups.categories.value.filter((c) => !c.archived).length))
 </script>
 
@@ -36,6 +37,7 @@ const categoryCount = computed(() => String(lookups.categories.value.filter((c) 
 
     <SettingsGroup title="Organize">
       <SettingsRow label="Categories" :icon="PhListBullets" :value="categoryCount" to="/settings/categories" />
+      <SettingsRow label="Cards" :icon="PhCreditCard" :value="cardCount" to="/settings/cards" />
     </SettingsGroup>
 
     <SettingsGroup title="Automation">

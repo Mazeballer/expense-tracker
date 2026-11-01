@@ -6,7 +6,7 @@ import { formatMoney } from '~/lib/format'
 import type { PlanItem } from '~/types'
 
 defineProps<{ title: string; items: PlanItem[]; computedRows?: { label: string; amount: number }[]; total: number }>()
-defineEmits<{ add: []; edit: [item: PlanItem]; rename: [item: PlanItem]; remove: [item: PlanItem]; editRate: [] }>()
+defineEmits<{ add: []; edit: [item: PlanItem]; rename: [item: PlanItem]; remove: [item: PlanItem]; editRate: []; removeRate: [] }>()
 </script>
 
 <template>
@@ -27,6 +27,7 @@ defineEmits<{ add: []; edit: [item: PlanItem]; rename: [item: PlanItem]; remove:
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end">
             <DropdownMenuItem class="gap-3" @select="$emit('editRate')"><PhPencilSimple :size="20" />Change rate</DropdownMenuItem>
+            <DropdownMenuItem class="gap-3 text-alert focus:text-alert" @select="$emit('removeRate')"><PhTrash :size="20" />Set to zero</DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
       </li>

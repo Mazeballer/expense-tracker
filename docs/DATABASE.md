@@ -52,7 +52,7 @@ Unique `(user_id, effective_from)`. Seed: `2000-01-01`, `0.11`. Change it with R
 Seed: Food & Drinks 🍜, Groceries 🛒, Transport 🚗, Shopping 🛍️, Entertainment 🎬, Health 💊, Others 🧾.
 
 ### `payment_methods`
-Only two, so the app can show "credit card to pay".
+Just two rows, Debit card and Credit card. Under Settings, Cards, each holds a list of Wallet card names.
 
 | column | type | notes |
 |---|---|---|
@@ -61,6 +61,7 @@ Only two, so the app can show "credit card to pay".
 | kind | text | `debit` or `credit_card` |
 | sort | int | |
 | archived | boolean | |
+| wallet_names | text[] | up to 20 card names as Apple Wallet shows them. Debit and credit each hold a list, used to match Apple Pay payments |
 
 Seed: Debit card, Credit card. Imported history has no method (`expenses.payment_method_id` is null).
 

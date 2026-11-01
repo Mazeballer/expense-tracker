@@ -34,7 +34,7 @@ async function saveLine(v: { label: string; amount: number; fromMonth: string })
   const item = lineSheet.item
   const ok = await runSave(
     () => (item ? planApi.change(item.groupKey, v.amount, v.fromMonth) : planApi.add({ kind: lineSheet.kind, label: v.label, amount: v.amount, effectiveFrom: v.fromMonth })),
-    item ? 'Changes saved' : 'Line added',
+    item ? `Saved from ${formatMonth(v.fromMonth)}` : 'Line added',
   )
   if (ok) lineSheet.open = false
 }
@@ -42,6 +42,9 @@ async function saveLine(v: { label: string; amount: number; fromMonth: string })
 async function saveRate(v: { rate: number; fromMonth: string }) {
   if (await runSave(() => settingsApi.changeEpfRate(v.rate, v.fromMonth), 'Changes saved')) rateSheet.value = false
 }
+
+// EPF has no amount of its own, only a rate, so removing it means a rate of 0% from this month on.
+const removeRate = () => runSave(() => settingsApi.changeEpfRate(0, month.value), `EPF set to zero from ${formatMonth(month.value)}`)
 
 async function saveRename(name: string) {
   const item = renameSheet.item
@@ -72,7 +75,7 @@ async function confirmRemove() {
           :items="ofKind('deduction')"
           :computed-rows="[{ label: `EPF (${formatPercent(epfRate)} of income)`, amount: summary.epf }]"
           :total="summary.deductions"
-          @add="openLine('deduction')" @edit="openLine('deduction', $event)" @rename="openRename" @remove="removing = $event" @edit-rate="rateSheet = true"
+          @add="openLine('deduction')" @edit="openLine('deduction', $event)" @rename="openRename" @remove="removing = $event" @edit-rate="rateSheet = true" @remove-rate="removeRate"
         />
         <PlanSection title="Fixed costs" :items="ofKind('fixed')" :total="sectionTotal('fixed')" @add="openLine('fixed')" @edit="openLine('fixed', $event)" @rename="openRename" @remove="removing = $event" />
       </div>

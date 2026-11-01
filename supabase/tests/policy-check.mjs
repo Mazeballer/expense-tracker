@@ -23,7 +23,7 @@ create function storage.foldername(name text) returns text[] language sql immuta
 grant usage on schema storage to authenticated;
 grant all on storage.objects to authenticated;
 `)
-for (const f of ['0001_schema.sql', '0002_rls.sql', '0003_auth.sql', '0004_functions.sql', '0005_storage.sql', '0006_allowlist_trim.sql', '0007_apple_pay.sql']) {
+for (const f of ['0001_schema.sql', '0002_rls.sql', '0003_auth.sql', '0004_functions.sql', '0005_storage.sql', '0006_allowlist_trim.sql', '0007_apple_pay.sql', '0008_wallet_names.sql', '0009_wallet_names_list.sql']) {
   try { await run(readFileSync(dir + f, 'utf8')); console.log('ran', f) } catch (e) { console.log('FAILED', f, e.message); process.exit(1) }
 }
 
@@ -58,6 +58,7 @@ await check('monthly view for B is empty', async () => (await as(B, `select coun
 await as(A, `insert into public.plan_items (kind, label, amount, effective_from) values ('income','Base Salary',3900,'2026-01-01')`)
 const group = (await as(A, `select group_key from public.plan_items`)).rows[0].group_key
 await check('plan_item_change from next month keeps old month', async () => { await as(A, `select public.plan_item_change('${group}', 4500, '2026-11-01')`); return JSON.stringify((await as(A, `select amount::float, effective_from::text, effective_to::text from public.plan_items order by effective_from`)).rows) })
+await check('plan line can be set to 0 and then deleted', async () => { await as(A, `insert into public.plan_items (kind, label, amount, effective_from) values ('deduction','Zero test',50,'2026-01-01')`); const g = (await as(A, `select group_key from public.plan_items where label='Zero test'`)).rows[0].group_key; await as(A, `select public.plan_item_change('${g}', 0, '2026-11-01')`); await as(A, `select public.plan_item_end('${g}', '2026-11-01')`); return JSON.stringify((await as(A, `select amount::float, effective_to::text from public.plan_items where label='Zero test' order by effective_from desc limit 1`)).rows) })
 await check('plan_item_end', async () => { await as(A, `select public.plan_item_end('${group}', '2027-01-01')`); return JSON.stringify((await as(A, `select amount::float, effective_to::text from public.plan_items order by effective_from`)).rows) })
 await check('change_epf_rate from next month', async () => { await as(A, `select public.change_epf_rate(0.13, '2026-11-01')`); return JSON.stringify((await as(A, `select rate::float, effective_from::text from public.epf_rates order by effective_from`)).rows) })
 await check('B cannot change A plan line', async () => { try { await as(B, `select public.plan_item_change('${group}', 1, '2026-12-01')`); return 'no error' } catch (e) { return 'blocked: ' + e.message } })
@@ -70,6 +71,7 @@ const anon = async (sql) => { await run('set role anon'); try { return await db.
 await check('B cannot see A api tokens (expect 0)', async () => (await as(B, `select count(*)::int n from public.api_tokens`)).rows[0].n)
 await check('anon cannot read api_tokens', async () => { try { await anon(`select * from public.api_tokens`); return 'allowed (BAD)' } catch { return 'blocked' } })
 await check('apple pay: good token returns A categories and cards', async () => { const r = (await anon(`select public.apple_pay_context('secret-token') c`)).rows[0].c; return `${r.categories.length > 0 && r.methods.length > 0}` })
+await check('apple pay: wallet names are returned per card type', async () => { await as(A, `update public.payment_methods set wallet_names = array['Maybank Visa','CIMB Octo'] where kind = 'credit_card'`); const r = (await anon(`select public.apple_pay_context('secret-token') c`)).rows[0].c; return JSON.stringify(r.methods.filter((m) => m.kind === 'credit_card').map((m) => m.walletNames)) })
 await check('apple pay: wrong token returns null', async () => (await anon(`select public.apple_pay_context('nope') c`)).rows[0].c === null)
 await check('apple pay: logs an expense for the token owner', async () => { await anon(`select public.apple_pay_log('secret-token', 8.40, 'Starbucks', '${catA}', null)`); return JSON.stringify((await as(A, `select amount::float, source from public.expenses where description='Starbucks'`)).rows) })
 await check('apple pay: same payment twice is saved once', async () => { await anon(`select public.apple_pay_log('secret-token', 8.40, 'Starbucks', '${catA}', null)`); return (await as(A, `select count(*)::int n from public.expenses where description='Starbucks'`)).rows[0].n })

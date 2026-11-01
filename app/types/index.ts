@@ -1,7 +1,7 @@
 export type Category = { id: string; name: string; icon: string; sort: number; archived: boolean }
 
 export type PaymentMethodKind = 'debit' | 'credit_card'
-export type PaymentMethod = { id: string; name: string; kind: PaymentMethodKind; archived: boolean }
+export type PaymentMethod = { id: string; name: string; kind: PaymentMethodKind; archived: boolean; walletNames: string[] }
 
 export type ExpenseSource = 'app' | 'quick_add' | 'receipt' | 'telegram' | 'import' | 'apple_pay'
 export type Expense = {

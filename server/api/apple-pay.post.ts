@@ -9,7 +9,7 @@ const body = z.object({
   card: z.coerce.string().trim().max(80).default(''),
 })
 
-type Context = { categories: { id: string; name: string }[]; methods: { id: string; name: string; kind: 'debit' | 'credit_card' }[] }
+type Context = { categories: { id: string; name: string }[]; methods: { id: string; name: string; kind: 'debit' | 'credit_card'; walletNames?: string[] }[] }
 
 const hits = new Map<string, number[]>()
 function limited(ip: string) {
@@ -71,5 +71,6 @@ export default defineEventHandler(async (event) => {
     p_token: token, p_amount: amount, p_description: description, p_category_id: categoryId, p_payment_method_id: methodId,
   })
   const category = context.categories.find((c) => c.id === categoryId)?.name ?? 'Others'
-  return { ok: true, message: `Logged RM ${amount.toFixed(2)} at ${description} (${category})` }
+  const cardName = context.methods.find((m) => m.id === methodId)?.name
+  return { ok: true, message: `Logged RM ${amount.toFixed(2)} at ${description} (${category})${cardName ? ` on ${cardName}` : ''}` }
 })

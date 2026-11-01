@@ -124,8 +124,8 @@ export const mockBackend: Backend = {
   }),
   updateCategory: (id, patch) => run(() => Object.assign(find(db().categories, id), patch)),
   listPaymentMethods: () => run(() => db().paymentMethods),
-  addPaymentMethod: (name, kind) => run(() => {
-    const row = { id: newId('pm'), name, kind, archived: false }
+  addPaymentMethod: (name, kind, walletNames) => run(() => {
+    const row = { id: newId('pm'), name, kind, archived: false, walletNames: walletNames ?? [] }
     db().paymentMethods.push(row)
     return row
   }),

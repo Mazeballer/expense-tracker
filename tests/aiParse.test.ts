@@ -81,12 +81,25 @@ describe('apple pay helpers', () => {
     expect(parseAmount('')).toBeNull()
     expect(parseAmount('0')).toBeNull()
   })
-  it('matches the card by name first, then by credit or debit', () => {
+  it('matches the card by its exact name, then the word credit, and anything else is debit', () => {
     expect(pickMethod('Maybank Visa', methods)).toBe('m')
-    expect(pickMethod('Maybank Visa Platinum', methods)).toBe('m')
+    expect(pickMethod('Credit card', methods)).toBe('c')
+    expect(pickMethod('Maybank Visa Platinum', methods)).toBe('d')
     expect(pickMethod('CIMB Credit Card', methods)).toBe('c')
     expect(pickMethod('CIMB Octo', methods)).toBe('d')
     expect(pickMethod('', methods)).toBe('d')
     expect(pickMethod('x', [])).toBeNull()
+  })
+  it('uses the Wallet names saved under debit and credit first, with several cards per type', () => {
+    const cards = [
+      { id: 'cr', name: 'Credit card', kind: 'credit_card' as const, walletNames: ['Maybank Visa Platinum', 'CIMB Octo'] },
+      { id: 'db', name: 'Debit card', kind: 'debit' as const, walletNames: ['Maybank Debit', 'TNG Visa'] },
+    ]
+    expect(pickMethod('maybank  visa platinum', cards)).toBe('cr')
+    expect(pickMethod('CIMB Octo', cards)).toBe('cr')
+    expect(pickMethod('Maybank Debit', cards)).toBe('db')
+    expect(pickMethod('TNG Visa Card', cards)).toBe('db')
+    expect(pickMethod('Some Other Credit Card', cards)).toBe('cr')
+    expect(pickMethod('Unknown', cards)).toBe('db')
   })
 })

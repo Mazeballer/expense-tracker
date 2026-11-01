@@ -28,8 +28,8 @@ export interface Backend {
   addCategory(name: string, icon?: string): Promise<Category>
   updateCategory(id: string, patch: Partial<Pick<Category, 'name' | 'icon' | 'archived'>>): Promise<Category>
   listPaymentMethods(): Promise<PaymentMethod[]>
-  addPaymentMethod(name: string, kind: PaymentMethodKind): Promise<PaymentMethod>
-  updatePaymentMethod(id: string, patch: Partial<Pick<PaymentMethod, 'name' | 'kind' | 'archived'>>): Promise<PaymentMethod>
+  addPaymentMethod(name: string, kind: PaymentMethodKind, walletNames?: string[]): Promise<PaymentMethod>
+  updatePaymentMethod(id: string, patch: Partial<Pick<PaymentMethod, 'name' | 'kind' | 'archived' | 'walletNames'>>): Promise<PaymentMethod>
 
   listAccounts(): Promise<Account[]>
   addAccount(input: Omit<Account, 'id' | 'archived'>): Promise<Account>

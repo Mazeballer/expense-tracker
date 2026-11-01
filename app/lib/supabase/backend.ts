@@ -34,7 +34,7 @@ const expense = (r: Row): Expense => ({
   paymentMethodId: r.payment_method_id, amount: Number(r.amount), note: r.note, source: r.source,
 })
 const category = (r: Row): Category => ({ id: r.id, name: r.name, icon: r.icon, sort: r.sort, archived: r.archived })
-const method = (r: Row): PaymentMethod => ({ id: r.id, name: r.name, kind: r.kind, archived: r.archived })
+const method = (r: Row): PaymentMethod => ({ id: r.id, name: r.name, kind: r.kind, archived: r.archived, walletNames: r.wallet_names ?? [] })
 const planItem = (r: Row): PlanItem => ({
   id: r.id, groupKey: r.group_key, kind: r.kind, label: r.label, amount: Number(r.amount),
   effectiveFrom: r.effective_from, effectiveTo: r.effective_to, sort: r.sort,
@@ -164,11 +164,13 @@ export const supabaseBackend: Backend = {
   async listPaymentMethods() {
     return check(await supabase().from('payment_methods').select('*').order('sort')).map(method)
   },
-  async addPaymentMethod(name, kind) {
-    return method(check(await supabase().from('payment_methods').insert({ name, kind }).select().single()))
+  async addPaymentMethod(name, kind, walletNames) {
+    return method(check(await supabase().from('payment_methods').insert({ name, kind, wallet_names: walletNames ?? [] }).select().single()))
   },
   async updatePaymentMethod(id, patch) {
-    return method(check(await supabase().from('payment_methods').update(patch).eq('id', id).select().single()))
+    const { walletNames, ...rest } = patch
+    const row = walletNames === undefined ? rest : { ...rest, wallet_names: walletNames }
+    return method(check(await supabase().from('payment_methods').update(row).eq('id', id).select().single()))
   },
 
   async listAccounts() {

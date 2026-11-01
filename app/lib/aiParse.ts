@@ -103,17 +103,24 @@ export function resolveReceipt(raw: unknown, ctx: { categories: Named[]; today: 
   }
 }
 
-// Picks the card for an Apple Pay payment from the card name the iPhone sends: a name match first, then credit or debit.
-export function pickMethod(card: string, methods: { id: string; name: string; kind: 'debit' | 'credit_card' }[]): string | null {
-  const wanted = card.trim().toLowerCase()
-  if (wanted) {
-    const byName = methods.find((m) => wanted === m.name.toLowerCase())
-      ?? methods.find((m) => wanted.includes(m.name.toLowerCase()) || m.name.toLowerCase().includes(wanted))
-    if (byName) return byName.id
-    const kind = /credit/.test(wanted) ? 'credit_card' : 'debit'
-    return methods.find((m) => m.kind === kind)?.id ?? methods[0]?.id ?? null
-  }
-  return methods[0]?.id ?? null
+// Picks the card for an Apple Pay payment from the card name the iPhone sends. A Wallet name saved under debit or credit wins,
+// then the method's own name. After that a name with the word credit in it is credit, and anything else is debit.
+type PayMethod = { id: string; name: string; kind: 'debit' | 'credit_card'; walletNames?: string[] }
+const clean = (v: string) => v.trim().toLowerCase().replace(/\s+/g, ' ')
+
+export function pickMethod(card: string, methods: PayMethod[]): string | null {
+  const wanted = clean(card)
+  const debit = methods.find((m) => m.kind === 'debit')?.id ?? methods[0]?.id ?? null
+  if (!wanted) return debit
+  const byWallet = methods
+    .flatMap((m) => (m.walletNames ?? []).map((n) => ({ id: m.id, w: clean(n) })))
+    .filter(({ w }) => w && (wanted === w || wanted.includes(w) || w.includes(wanted)))
+    .sort((x, y) => Number(y.w === wanted) - Number(x.w === wanted) || y.w.length - x.w.length)[0]
+  if (byWallet) return byWallet.id
+  const byName = methods.find((m) => wanted === clean(m.name))
+  if (byName) return byName.id
+  // Nothing matched: a name with the word credit in it is a credit card, anything else is debit.
+  return /credit/.test(wanted) ? (methods.find((m) => m.kind === 'credit_card')?.id ?? debit) : debit
 }
 
 // Shortcuts sends the amount as text like "RM12.50". Returns the number, or null when it is not a purchase.

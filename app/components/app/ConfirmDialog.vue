@@ -1,4 +1,5 @@
 <script setup lang="ts">
+// The confirm event is sent in the capture phase, before the dialog closes itself. A page that clears the chosen item when the dialog closes would otherwise find it already gone.
 import {
   AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription,
   AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
@@ -18,7 +19,7 @@ defineEmits<{ confirm: [] }>()
       </AlertDialogHeader>
       <AlertDialogFooter>
         <AlertDialogCancel class="h-11">Cancel</AlertDialogCancel>
-        <AlertDialogAction class="h-11 bg-alert text-ground hover:bg-alert/90" @click="$emit('confirm')">{{ confirmLabel }}</AlertDialogAction>
+        <AlertDialogAction class="h-11 bg-alert text-ground hover:bg-alert/90" @click.capture="$emit('confirm')">{{ confirmLabel }}</AlertDialogAction>
       </AlertDialogFooter>
     </AlertDialogContent>
   </AlertDialog>
