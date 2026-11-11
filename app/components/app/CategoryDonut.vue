@@ -17,7 +17,7 @@ const tooltip = { [Donut.selectors.segment]: (d: { data: Slice }) => `<div class
 
 <template>
   <div class="flex flex-col gap-4">
-  <ChartContainer :config="config" class="mx-auto aspect-square h-[200px] w-[200px]" role="img" aria-label="Spending by category">
+  <ChartContainer :config="config" class="mx-auto aspect-square h-[200px] w-[200px] [--vis-donut-central-label-text-color:var(--ink)] [--vis-donut-central-sub-label-text-color:var(--ink)]" role="img" aria-label="Spending by category">
     <VisSingleContainer :data="data" :height="200">
       <VisDonut :value="value" :color="color" :arc-width="28" :pad-angle="0.02" :corner-radius="3" :central-label="formatMoney(total)" central-sub-label="Spent" />
       <VisTooltip :triggers="tooltip" />
