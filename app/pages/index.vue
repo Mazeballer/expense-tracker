@@ -2,7 +2,7 @@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import type { CategoryRow } from '~/components/app/CategoryTable.vue'
 import { addMonths, currentMonth, formatMonthShort, monthName, monthRange } from '~/lib/date'
-import { epfRateAt, leftToSpend, planSummary, savingsTotals } from '~/lib/finance'
+import { epfRateAt, leftToSpend, planSummary } from '~/lib/finance'
 import { round2 } from '~/lib/format'
 import type { Expense } from '~/types'
 
@@ -10,7 +10,6 @@ const { list } = useExpenses()
 const { totals } = useMonthTotals()
 const { all: allPlan } = usePlan()
 const { get: getSettings } = useSettings()
-const loadSavings = useSavingsData()
 const { categories } = useLookups()
 const { show } = useAddSheet()
 const deleteExpense = useDeleteExpense()
@@ -20,14 +19,13 @@ const month = ref(currentMonth())
 const isDesktop = useIsDesktop()
 
 const { data, loading, error, reload } = useResource(async () => {
-  const [monthTotals, plan, settings, recent, savings] = await Promise.all([
+  const [monthTotals, plan, settings, recent] = await Promise.all([
     totals(addMonths(month.value, -12), month.value),
     allPlan(),
     getSettings(),
     list({ month: month.value }),
-    loadSavings(),
   ])
-  return { monthTotals, plan, settings, recent: recent.slice(0, 10), savings }
+  return { monthTotals, plan, settings, recent: recent.slice(0, 10) }
 }, [month])
 
 const monthSum = (m: string) => round2((data.value?.monthTotals ?? []).filter((t) => t.month === m).reduce((s, t) => s + t.total, 0))
@@ -57,11 +55,6 @@ const categoryRows = computed<CategoryRow[]>(() => {
 })
 
 const donut = computed(() => categoryRows.value.map((r) => ({ id: r.id, name: r.name, total: r.total, colorVar: r.colorVar })))
-
-const savingsTotal = computed(() => {
-  const s = data.value?.savings
-  return s ? savingsTotals(s.accounts, s.txs, s.vals, s.settings.savingsGoal) : null
-})
 
 const recent = computed(() => (data.value?.recent ?? []).slice(0, isDesktop.value ? 10 : 5))
 const edit = (e: Expense) => show(e)
@@ -111,7 +104,7 @@ const edit = (e: Expense) => show(e)
       </div>
 
       <div class="grid gap-8 max-lg:contents lg:grid-cols-12">
-        <section class="max-lg:order-2 lg:col-span-8" aria-label="Recent expenses">
+        <section class="max-lg:order-2 lg:col-span-12" aria-label="Recent expenses">
           <div class="mb-1 flex items-baseline justify-between">
             <h2 class="t-heading">Recent expenses</h2>
             <NuxtLink to="/expenses" class="flex min-h-11 items-center text-brand-text">See all</NuxtLink>
@@ -121,9 +114,6 @@ const edit = (e: Expense) => show(e)
           </ul>
           <EmptyState v-else message="No expenses this month. Add one to start." action="Add expense" @action="show()" />
         </section>
-        <div class="max-lg:order-4 lg:col-span-4">
-          <SavingsSummary v-if="savingsTotal" :total="savingsTotal.total" :goal="savingsTotal.goal" :progress="savingsTotal.progress" />
-        </div>
       </div>
     </template>
   </div>

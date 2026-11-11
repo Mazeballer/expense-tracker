@@ -11,7 +11,7 @@ const onTap = (to: string) => { if (isActive(to)) window.scrollTo({ top: 0, beha
     aria-label="Main"
     class="fixed inset-x-4 bottom-[calc(env(safe-area-inset-bottom)+12px)] z-30 mx-auto max-w-[400px] rounded-full border border-line/60 bg-surface/90 backdrop-blur-xl backdrop-saturate-150 supports-[backdrop-filter]:bg-surface/65 lg:hidden"
   >
-    <ul class="grid h-16 grid-cols-5 items-center px-1">
+    <ul class="grid h-16 items-center px-1" :style="{ gridTemplateColumns: `repeat(${NAV_ITEMS.length}, minmax(0, 1fr))` }">
       <li v-for="item in NAV_ITEMS" :key="item.to">
         <NuxtLink
           :to="item.to"
