@@ -1,30 +1,24 @@
 import { describe, expect, it } from 'vitest'
 import type { Expense } from '../app/types'
-import { addDays, lastWeeks, monthsCovering, weekStart } from '../app/lib/weekly'
+import { dayRange, monthWeeks } from '../app/lib/weekly'
 
 const spent = (date: string, amount: number, time = '12:00:00'): Expense =>
   ({ id: date + amount, spentAt: `${date}T${time}+08:00`, description: 'x', categoryId: 'c', paymentMethodId: null, amount, note: null, source: 'app' })
 
-describe('weekly spending', () => {
-  it('starts weeks on Monday', () => {
-    expect(weekStart('2026-11-11')).toBe('2026-11-09') // Wednesday
-    expect(weekStart('2026-11-09')).toBe('2026-11-09') // Monday
-    expect(weekStart('2026-11-15')).toBe('2026-11-09') // Sunday
-    expect(addDays('2026-12-30', 3)).toBe('2027-01-02')
+describe('weekly spending for a month', () => {
+  it('splits the month into weeks of seven days, the last one shorter', () => {
+    const weeks = monthWeeks([], '2026-11-01')
+    expect(weeks.map(dayRange)).toEqual(['1-7', '8-14', '15-21', '22-28', '29-30'])
+    expect(weeks.map((w) => w.days)).toEqual([7, 7, 7, 7, 2])
   })
-  it('adds each expense to its week by Malaysia date, oldest week first', () => {
-    const weeks = lastWeeks([
-      spent('2026-11-09', 10.5, '00:30:00'), // just after midnight in Malaysia
-      spent('2026-11-15', 4.5, '23:30:00'),
-      spent('2026-11-08', 20), // last week's Sunday
-      spent('2026-09-01', 99), // too old, left out
-    ], '2026-11-11', 4)
-    expect(weeks.map((w) => w.from)).toEqual(['2026-10-19', '2026-10-26', '2026-11-02', '2026-11-09'])
-    expect(weeks.map((w) => w.total)).toEqual([0, 0, 20, 15])
-    expect(weeks[3]!.count).toBe(2)
-  })
-  it('lists the months that hold the weeks', () => {
-    const weeks = lastWeeks([], '2026-11-11', 4)
-    expect(monthsCovering(weeks)).toEqual(['2026-10-01', '2026-11-01'])
+  it('adds each expense to its week by Malaysia date', () => {
+    const weeks = monthWeeks([
+      spent('2026-11-07', 10.5, '23:30:00'),
+      spent('2026-11-08', 4.5, '00:30:00'), // just after midnight in Malaysia, so week 2
+      spent('2026-11-30', 20),
+      spent('2026-10-31', 99), // another month, left out
+    ], '2026-11-01')
+    expect(weeks.map((w) => w.total)).toEqual([10.5, 4.5, 0, 0, 20])
+    expect(weeks[0]!.count).toBe(1)
   })
 })

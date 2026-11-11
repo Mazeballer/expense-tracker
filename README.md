@@ -5,7 +5,7 @@ Your wallet, but wise. A personal finance app for two people: log expenses, keep
 ## What it does
 
 - **Log an expense** by typing a sentence ("12.50 lunch cc") or scanning a receipt. Choose Debit card or Credit card.
-- **Home:** left to spend this month, spending trend, category breakdown, recent expenses.
+- **Home:** left to spend this month, category breakdown, recent expenses.
 - **Expenses:** every expense by month, with search, category filter and a Debit / Credit filter. A card shows how much your credit card needs paying this month and the last 6 months.
 - **Graph:** weekly spending for the last 12 weeks (Monday to Sunday) with your weekly average, a category breakdown for the week you tap, and a 12 month trend.
 - **Settings:** income, EPF and other deductions, fixed costs (changes can apply from this month or next, and past months keep their old numbers), savings goal, categories, Face ID and PIN lock, export all data.

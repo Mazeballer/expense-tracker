@@ -1,7 +1,6 @@
 <script setup lang="ts">
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import type { CategoryRow } from '~/components/app/CategoryTable.vue'
-import { addMonths, currentMonth, formatMonthShort, monthName, monthRange } from '~/lib/date'
+import { addMonths, currentMonth, monthName } from '~/lib/date'
 import { epfRateAt, leftToSpend, planSummary } from '~/lib/finance'
 import { round2 } from '~/lib/format'
 import type { Expense } from '~/types'
@@ -20,7 +19,7 @@ const isDesktop = useIsDesktop()
 
 const { data, loading, error, reload } = useResource(async () => {
   const [monthTotals, plan, settings, recent] = await Promise.all([
-    totals(addMonths(month.value, -12), month.value),
+    totals(addMonths(month.value, -1), month.value),
     allPlan(),
     getSettings(),
     list({ month: month.value }),
@@ -32,8 +31,6 @@ const monthSum = (m: string) => round2((data.value?.monthTotals ?? []).filter((t
 
 const plan = computed(() => data.value ? planSummary(data.value.plan, epfRateAt(data.value.settings.epfRates, month.value), month.value) : null)
 const figures = computed(() => plan.value ? leftToSpend(plan.value, monthSum(month.value)) : null)
-
-const trend = computed(() => monthRange(month.value, 12).map((m) => ({ month: m, label: formatMonthShort(m), total: monthSum(m) })))
 
 const colorVar = (id: string) => `var(--chart-${(Math.max(0, categories.value.findIndex((c) => c.id === id)) % 7) + 1})`
 
@@ -68,28 +65,18 @@ const edit = (e: Expense) => show(e)
     <ErrorState v-else-if="error || !data || !plan || !figures" what="expenses" @retry="reload" />
     <template v-else>
       <div class="grid gap-8 max-lg:contents lg:grid-cols-12">
-        <div class="flex flex-col gap-3 max-lg:order-1 lg:col-span-5">
+        <div class="flex flex-col gap-3 max-lg:order-1 lg:col-span-12">
           <LeftToSpendHero :plan="plan" :figures="figures" :month="month" />
         </div>
 
-        <section v-if="isDesktop" class="lg:col-span-7" aria-label="Spending trend">
-          <h2 class="t-heading mb-3">Last 12 months</h2>
-          <TrendChart :data="trend" :selected="month" />
+        <section v-if="!isDesktop" class="order-3 flex flex-col gap-4" aria-label="Spending by category">
+          <h2 class="t-heading">Categories in {{ monthName(month) }}</h2>
+          <EmptyState v-if="!categoryRows.length" message="No expenses this month. Add one to start." action="Add expense" @action="show()" />
+          <template v-else>
+            <LazyCategoryDonut :data="donut" />
+            <CategoryTable :rows="categoryRows" />
+          </template>
         </section>
-        <Tabs v-else default-value="trend" class="order-3">
-          <TabsList class="grid h-11 w-full grid-cols-2">
-            <TabsTrigger value="trend" class="h-9">Trend</TabsTrigger>
-            <TabsTrigger value="categories" class="h-9">Categories</TabsTrigger>
-          </TabsList>
-          <TabsContent value="trend" class="pt-4"><TrendChart :data="trend" :selected="month" bleed /></TabsContent>
-          <TabsContent value="categories" class="flex flex-col gap-4 pt-4">
-            <EmptyState v-if="!categoryRows.length" message="No expenses this month. Add one to start." action="Add expense" @action="show()" />
-            <template v-else>
-              <LazyCategoryDonut :data="donut" />
-              <CategoryTable :rows="categoryRows" />
-            </template>
-          </TabsContent>
-        </Tabs>
 
         <section v-if="isDesktop" class="grid gap-8 lg:col-span-12 lg:grid-cols-12" aria-label="Spending by category">
           <div class="lg:col-span-5">
